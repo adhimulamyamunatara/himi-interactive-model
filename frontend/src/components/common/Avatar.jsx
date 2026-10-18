@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { getAvatarColorClasses } from '../../utils/avatar';
 import { getInitials } from '../../utils/formatters';
 
 const SIZES = {
@@ -7,13 +9,34 @@ const SIZES = {
   xl: 'h-28 w-28 rounded-[2rem] text-3xl'
 };
 
-/** Gradient initials avatar used as a profile picture placeholder. */
-export default function Avatar({ name = '', size = 'md', className = '' }) {
+/**
+ * Profile picture. Shows the student's photo when there is one and it loads, otherwise coloured initials.
+ * A missing, invalid or broken image silently falls back to the initials, so the avatar never looks broken.
+ */
+export default function Avatar({ name = '', image = '', color, size = 'md', className = '' }) {
+  const [failedImage, setFailedImage] = useState('');
+  const showImage = Boolean(image) && failedImage !== image;
+  const base = `shrink-0 shadow-card ${SIZES[size]} ${className}`;
+
+  if (showImage) {
+    return (
+      <img
+        src={image}
+        alt={name ? `Profile photo of ${name}` : 'Profile photo'}
+        width={160}
+        height={160}
+        draggable="false"
+        onError={() => setFailedImage(image)}
+        className={`${base} bg-slate-100 object-cover`}
+      />
+    );
+  }
+
   return (
     <div
       role="img"
       aria-label={name ? `Avatar for ${name}` : 'Avatar'}
-      className={`flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-400 font-bold text-white shadow-card ${SIZES[size]} ${className}`}
+      className={`flex items-center justify-center bg-gradient-to-br font-bold text-white ${getAvatarColorClasses(color)} ${base}`}
     >
       {getInitials(name)}
     </div>

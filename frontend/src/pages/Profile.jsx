@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiBookOpen, FiMail, FiRotateCcw, FiSave, FiTarget, FiUser } from 'react-icons/fi';
 import { LuGraduationCap, LuSchool } from 'react-icons/lu';
-import Avatar from '../components/common/Avatar';
+import AvatarEditor from '../components/avatar/AvatarEditor';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -94,7 +94,7 @@ export default function Profile() {
 
       <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Card className="flex flex-col items-center text-center">
-          <Avatar name={user?.name} size="xl" />
+          <AvatarEditor />
           <h2 className="mt-5 text-2xl font-bold text-slate-950">{user?.name}</h2>
           <p className="mt-1 max-w-full truncate text-sm text-slate-600">{user?.email}</p>
           <Badge tone="blue" className="mt-4">

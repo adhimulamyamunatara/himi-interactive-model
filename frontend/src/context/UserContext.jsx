@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { DEFAULT_AVATAR_COLOR, isAvatarColor, isValidAvatarDataUrl } from '../utils/avatar';
+import { normalizeStoredUser } from '../utils/userProfile';
 
 const USER_STORAGE_KEY = 'himi.user';
 const UserContext = createContext(null);
@@ -7,7 +9,8 @@ const EMPTY_PROFILE = {
   college: '',
   branch: '',
   semester: '',
-  learningGoal: ''
+  learningGoal: '',
+  avatarColor: DEFAULT_AVATAR_COLOR
 };
 
 function readStoredUser() {
@@ -18,16 +21,30 @@ function readStoredUser() {
   }
 
   try {
-    return JSON.parse(storedValue);
+    const user = normalizeStoredUser(JSON.parse(storedValue));
+
+    if (!user) {
+      window.localStorage.removeItem(USER_STORAGE_KEY);
+    }
+
+    return user;
   } catch {
     window.localStorage.removeItem(USER_STORAGE_KEY);
     return null;
   }
 }
 
+/** @returns {boolean} false when the browser refused the write (for example: storage full or blocked). */
 function persistUser(user) {
-  window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  try {
+    window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    return true;
+  } catch {
+    return false;
+  }
 }
+
+const STORAGE_FULL_MESSAGE = 'Your browser could not save this change. Free up some storage space and try again.';
 
 export function UserProvider({ children }) {
   // localStorage is synchronous, so the session is restored during the first render
@@ -67,9 +84,48 @@ export function UserProvider({ children }) {
     persistUser(nextUser);
   }, []);
 
+  /**
+   * Avatar changes are saved first and only shown if the browser accepted them, so a full storage never leaves
+   * the screen and the saved data disagreeing.
+   *
+   * @returns {{ ok: true } | { ok: false, error: string }}
+   */
+  const commitAvatar = useCallback((changes) => {
+    const current = readStoredUser();
+
+    if (!current) {
+      return { ok: false, error: 'Please log in again to change your avatar.' };
+    }
+
+    const next = { ...current, ...changes };
+
+    if (next.avatarImage === undefined) {
+      delete next.avatarImage;
+    }
+
+    if (!persistUser(next)) {
+      return { ok: false, error: STORAGE_FULL_MESSAGE };
+    }
+
+    setUser(next);
+    return { ok: true };
+  }, []);
+
+  const setAvatarImage = useCallback(
+    (dataUrl) => (isValidAvatarDataUrl(dataUrl) ? commitAvatar({ avatarImage: dataUrl }) : { ok: false, error: 'That image cannot be used as an avatar.' }),
+    [commitAvatar]
+  );
+
+  const removeAvatarImage = useCallback(() => commitAvatar({ avatarImage: undefined }), [commitAvatar]);
+
+  const setAvatarColor = useCallback(
+    (key) => (isAvatarColor(key) ? commitAvatar({ avatarColor: key }) : { ok: false, error: 'Choose one of the listed colours.' }),
+    [commitAvatar]
+  );
+
   const value = useMemo(
-    () => ({ user, loading: false, login, logout, updateProfile }),
-    [login, logout, updateProfile, user]
+    () => ({ user, loading: false, login, logout, updateProfile, setAvatarImage, removeAvatarImage, setAvatarColor }),
+    [login, logout, updateProfile, setAvatarImage, removeAvatarImage, setAvatarColor, user]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

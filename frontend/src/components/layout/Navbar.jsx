@@ -6,7 +6,7 @@ import { useChat } from '../../context/ChatContext';
 import { useToast } from '../../context/ToastContext';
 import { useUser } from '../../context/UserContext';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
-import Avatar from '../common/Avatar';
+import UserAvatar from '../common/UserAvatar';
 import { MEMBER_PAGES, PUBLIC_PAGES } from '../../utils/navigation';
 import Button from '../common/Button';
 
@@ -132,7 +132,7 @@ export default function Navbar() {
                 to="/profile"
                 className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 transition hover:border-blue-200 sm:flex"
               >
-                <Avatar name={user.name} size="sm" className="!h-8 !w-8 !rounded-xl !text-xs" />
+                <UserAvatar size="sm" className="!h-8 !w-8 !rounded-xl !text-xs" />
                 <div className="text-left">
                   <p className="max-w-[9rem] truncate text-sm font-semibold leading-tight text-slate-900">{user.name}</p>
                   <p className="text-xs text-slate-500">Student</p>

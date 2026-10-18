@@ -8,6 +8,7 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import EmptyState from '../components/common/EmptyState';
 import ProgressRing from '../components/common/ProgressRing';
+import UserAvatar from '../components/common/UserAvatar';
 import ChatPreview from '../components/dashboard/ChatPreview';
 import QuickAction from '../components/dashboard/QuickAction';
 import StatCard from '../components/dashboard/StatCard';
@@ -93,10 +94,15 @@ export default function Dashboard() {
             <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-cyan-500/30 blur-3xl" />
             <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-300">{formatLongDate()}</p>
-                <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-                  {formatGreeting(user?.name?.split(' ')[0] || 'Student')}
-                </h1>
+                <div className="flex items-center gap-4">
+                  <UserAvatar size="lg" className="ring-2 ring-white/30" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-cyan-300">{formatLongDate()}</p>
+                    <h1 className="mt-1 break-words text-3xl font-black tracking-tight sm:text-4xl">
+                      {formatGreeting(user?.name?.split(' ')[0] || 'Student')}
+                    </h1>
+                  </div>
+                </div>
                 <p className="mt-4 text-sm leading-7 text-slate-300">
                   {hasActivity
                     ? `You have asked ${stats.totalQuestions} question${stats.totalQuestions === 1 ? '' : 's'} so far. Pick up where you left off.`

@@ -5,20 +5,24 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { formatTime } from '../../utils/formatters';
 import AssistantAvatar from '../avatar/AssistantAvatar';
 import { SubjectBadge } from '../common/Badge';
+import UserAvatar from '../common/UserAvatar';
 import MarkdownMessage from './MarkdownMessage';
 
 function UserBubble({ message }) {
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-3xl rounded-br-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 px-5 py-3 text-sm leading-6 text-white shadow-glow sm:max-w-[75%]">
-        {message.content}
+    <div className="flex items-end justify-end gap-3">
+      <div className="flex min-w-0 max-w-[88%] flex-col items-end gap-1.5 sm:max-w-[75%]">
+        <div className="max-w-full whitespace-pre-wrap break-words rounded-3xl rounded-br-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 px-5 py-3 text-sm leading-6 text-white shadow-glow">
+          {message.content}
+        </div>
+        <div className="flex items-center gap-2 pr-1">
+          <SubjectBadge subject={message.subject} />
+          <time dateTime={message.timestamp} className="text-xs text-slate-500">
+            {formatTime(message.timestamp)}
+          </time>
+        </div>
       </div>
-      <div className="flex items-center gap-2 pr-1">
-        <SubjectBadge subject={message.subject} />
-        <time dateTime={message.timestamp} className="text-xs text-slate-500">
-          {formatTime(message.timestamp)}
-        </time>
-      </div>
+      <UserAvatar size="sm" className="!h-9 !w-9 !rounded-xl !text-sm" />
     </div>
   );
 }
