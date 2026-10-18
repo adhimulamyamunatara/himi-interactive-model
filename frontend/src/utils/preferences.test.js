@@ -118,3 +118,10 @@ test('reload picks up a change written by another tab', () => {
   store.reload();
   assert.equal(store.getSnapshot().preferences.uiLanguage, 'te');
 });
+
+test('camera access defaults to allowed, only ever starts from a button, and old saved preferences still load', () => {
+  assert.equal(DEFAULT_PREFERENCES.cameraEnabled, true);
+  assert.equal(normalizePreferences({ uiLanguage: 'te' }).cameraEnabled, true);
+  assert.equal(normalizePreferences({ cameraEnabled: false }).cameraEnabled, false);
+  assert.equal(normalizePreferences({ cameraEnabled: 'no' }).cameraEnabled, true);
+});

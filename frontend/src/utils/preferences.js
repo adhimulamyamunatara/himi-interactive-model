@@ -24,7 +24,10 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   helpMode: 'guided',
   // Voice: everything is opt-in. Nothing is spoken or recorded unless the student asks.
   voiceEnabled: true,
-  autoReadReplies: false
+  autoReadReplies: false,
+  // Camera: allows the live camera to be requested at all. It never starts by itself, and choosing a photo from
+  // the device's files does not depend on it.
+  cameraEnabled: true
 });
 
 export const isLanguageCode = (value) => LANGUAGES.some((language) => language.code === value);
@@ -39,7 +42,8 @@ export function normalizePreferences(raw) {
     explanationLanguage: isLanguageCode(source.explanationLanguage) ? source.explanationLanguage : DEFAULT_PREFERENCES.explanationLanguage,
     helpMode: isHelpMode(source.helpMode) ? source.helpMode : DEFAULT_PREFERENCES.helpMode,
     voiceEnabled: typeof source.voiceEnabled === 'boolean' ? source.voiceEnabled : DEFAULT_PREFERENCES.voiceEnabled,
-    autoReadReplies: typeof source.autoReadReplies === 'boolean' ? source.autoReadReplies : DEFAULT_PREFERENCES.autoReadReplies
+    autoReadReplies: typeof source.autoReadReplies === 'boolean' ? source.autoReadReplies : DEFAULT_PREFERENCES.autoReadReplies,
+    cameraEnabled: typeof source.cameraEnabled === 'boolean' ? source.cameraEnabled : DEFAULT_PREFERENCES.cameraEnabled
   };
 }
 

@@ -87,6 +87,12 @@ export default function VoiceLanguageSettings() {
           disabled={!preferences.voiceEnabled}
           onChange={(value) => update({ autoReadReplies: value })}
         />
+        <Switch
+          label={t('settings.camera.enabled')}
+          hint={t('settings.camera.hint')}
+          checked={preferences.cameraEnabled}
+          onChange={(value) => update({ cameraEnabled: value })}
+        />
         {!preferences.voiceEnabled ? (
           <p role="status" className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {t('settings.voice.offNote')}
