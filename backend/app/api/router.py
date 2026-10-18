@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.routes.camera import router as camera_router
 from app.api.routes.chat import router as chat_router
 from app.api.routes.code import router as code_router
 from app.api.routes.diagrams import router as diagrams_router
@@ -16,3 +17,4 @@ api_router.include_router(notes_router)
 api_router.include_router(tutor_router)
 api_router.include_router(code_router)
 api_router.include_router(diagrams_router)
+api_router.include_router(camera_router)

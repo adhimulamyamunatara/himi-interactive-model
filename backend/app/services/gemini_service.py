@@ -99,8 +99,12 @@ def generate_text(
     temperature: float = 0.7,
     timeout_seconds: float = 60.0,
     model_name: str | None = None,
+    images: list[tuple[str, bytes]] | None = None,
 ) -> str:
     """Return raw model text for ``prompt`` using the shared key.
+
+    ``images`` is an optional list of ``(mime_type, bytes)`` still images sent with the prompt (used by the camera
+    feature). The bytes are passed straight to the provider and are not logged or kept.
 
     The model defaults to the ``GEMINI_MODEL`` setting; pass ``model_name`` to override it per feature.
 
@@ -129,7 +133,10 @@ def generate_text(
             system_instruction=system_instruction,
             generation_config=generation_config,
         )
-        result = model.generate_content(prompt, request_options={"timeout": timeout_seconds})
+        contents: object = prompt
+        if images:
+            contents = [prompt, *({"mime_type": mime, "data": data} for mime, data in images)]
+        result = model.generate_content(contents, request_options={"timeout": timeout_seconds})
         text = getattr(result, "text", None)
     except Exception as exc:
         if google_exceptions is not None and isinstance(exc, google_exceptions.DeadlineExceeded):

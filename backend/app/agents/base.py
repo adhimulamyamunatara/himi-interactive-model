@@ -133,6 +133,7 @@ def run_json_agent(
     model_name: str,
     validate: Callable[[Any], T],
     temperature: float = 0.4,
+    images: list[tuple[str, bytes]] | None = None,
 ) -> T:
     """Call the model for ``agent`` and return validated output.
 
@@ -145,6 +146,9 @@ def run_json_agent(
         started = time.monotonic()
         budget.spend_model_call()
 
+        # Only pass images when there are some, so text-only agents call the model exactly as before.
+        extra = {"images": images} if images else {}
+
         try:
             raw = generate_text(
                 prompt,
@@ -153,6 +157,7 @@ def run_json_agent(
                 temperature=temperature,
                 timeout_seconds=max(5.0, min(PER_CALL_TIMEOUT_SECONDS, budget.remaining_seconds())),
                 model_name=model_name,
+                **extra,
             )
         except GeminiConfigError as exc:
             logger.error("Agent %s unavailable: %s", agent, exc)
