@@ -9,6 +9,7 @@ import Card from '../components/common/Card';
 import EmptyState from '../components/common/EmptyState';
 import ProgressRing from '../components/common/ProgressRing';
 import UserAvatar from '../components/common/UserAvatar';
+import HimiStage from '../components/companion/HimiStage';
 import ChatPreview from '../components/dashboard/ChatPreview';
 import QuickAction from '../components/dashboard/QuickAction';
 import StatCard from '../components/dashboard/StatCard';
@@ -19,11 +20,12 @@ import { getRecentConversations } from '../utils/chatConversations';
 import { calculateStreak, getSubjectActivity } from '../utils/messageModel';
 import { SUBJECTS } from '../utils/subjects';
 
+// Honest roadmap: the animated companion and turn-based voice are live; these are not built yet.
 const UPCOMING = [
-  'Hands-free spoken conversations',
-  'Animated mentor avatar',
+  'Hands-free, always-listening conversations',
   'Shared multi-user classrooms',
-  'Accounts and sync across devices'
+  'Accounts and sync across devices',
+  'Understanding emotion or gestures (not built, and only if it can be validated)'
 ];
 
 const container = {
@@ -124,6 +126,11 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
+        </motion.div>
+
+        {/* HIMI: the companion is the way in; the tools below are what it uses ------- */}
+        <motion.div variants={item}>
+          <HimiStage />
         </motion.div>
 
         {/* Stats -------------------------------------------------------------------- */}

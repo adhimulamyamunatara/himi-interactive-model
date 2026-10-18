@@ -3,9 +3,11 @@ import { FiAlertTriangle, FiCheck, FiChevronDown, FiCopy, FiInfo, FiSlash } from
 import MarkdownMessage from '../chat/MarkdownMessage';
 import Badge from '../common/Badge';
 import Card from '../common/Card';
+import AskHimiButton from '../companion/AskHimiButton';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { useT } from '../../i18n/I18nContext';
 import { codeLine } from '../../utils/codeAssist';
+import { codePrompt } from '../../utils/companionPrompts';
 
 const SEVERITY_TONES = { info: 'blue', warning: 'amber', error: 'rose' };
 
@@ -107,6 +109,9 @@ export default function CodeResult({ result, code, onFollowUp }) {
         <h2 className="text-lg font-bold text-slate-900">{t('code.result.summary')}</h2>
         <div className="mt-3" lang={result.language}>
           <MarkdownMessage content={result.summary} />
+        </div>
+        <div className="mt-4">
+          <AskHimiButton size="sm" label={t('companion.askCode')} prompt={codePrompt({ summary: result.summary, findings: result.findings })} />
         </div>
         {result.review ? (
           <p className="mt-4 flex items-start gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-600">

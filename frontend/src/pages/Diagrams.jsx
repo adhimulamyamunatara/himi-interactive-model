@@ -9,7 +9,9 @@ import ErrorState from '../components/common/ErrorState';
 import Input from '../components/common/Input';
 import SegmentedControl from '../components/common/SegmentedControl';
 import Select from '../components/common/Select';
+import AskHimiButton from '../components/companion/AskHimiButton';
 import DiagramView from '../components/diagrams/DiagramView';
+import { diagramPrompt } from '../utils/companionPrompts';
 import MarkdownMessage from '../components/chat/MarkdownMessage';
 import { useChat } from '../context/ChatContext';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -96,6 +98,7 @@ function DiagramResult({ diagram }) {
           <Button type="button" variant="secondary" size="sm" onClick={() => copy(text)}>
             {copied ? <FiCheck aria-hidden="true" /> : <FiClipboard aria-hidden="true" />} {copied ? t('common.copied') : t('diagrams.copyText')}
           </Button>
+          <AskHimiButton size="sm" label={t('companion.askDiagram')} prompt={diagramPrompt({ title: diagram.title, explanation: diagram.explanation })} />
           <Button type="button" variant="secondary" size="sm" onClick={downloadSvg}>
             <FiDownload aria-hidden="true" /> {t('diagrams.downloadSvg')}
           </Button>

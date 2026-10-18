@@ -200,6 +200,181 @@ a {
   @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[0.85em] text-violet-700;
 }
 
+/* ------------------------------------------------------------------------------------------------
+   HIMI robot. Each loop belongs to one real state (`data-state` is set from the actual interaction), and
+   every state also has its own face and badge, so nothing depends on motion alone.
+------------------------------------------------------------------------------------------------- */
+.himi-robot {
+  overflow: visible;
+}
+
+.himi-robot * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.himi-robot .himi-body {
+  animation: himi-bob 4.8s ease-in-out infinite;
+}
+
+.himi-robot .himi-eye {
+  animation: himi-blink 5.2s ease-in-out infinite;
+}
+
+.himi-robot .himi-ray {
+  opacity: 0.9;
+}
+
+.himi-robot[data-state='listening'] .himi-ray {
+  animation: himi-ray-pulse 1.1s ease-in-out infinite;
+}
+
+.himi-robot[data-state='listening'] .himi-ray-2,
+.himi-robot[data-state='listening'] .himi-ray-4 {
+  animation-delay: 0.25s;
+}
+
+.himi-robot[data-state='thinking'] .himi-body {
+  animation: himi-sway 2.4s ease-in-out infinite;
+}
+
+.himi-robot[data-state='thinking'] .himi-eyes {
+  transform: translate(-2px, -2.5px);
+}
+
+.himi-robot[data-state='thinking'] .himi-dot {
+  animation: himi-dot 1s ease-in-out infinite;
+}
+
+.himi-robot[data-state='thinking'] .himi-dot-2 {
+  animation-delay: 0.18s;
+}
+
+.himi-robot[data-state='thinking'] .himi-dot-3 {
+  animation-delay: 0.36s;
+}
+
+.himi-robot[data-state='speaking'] .himi-mouth-open {
+  animation: himi-talk 0.42s ease-in-out infinite;
+}
+
+.himi-robot[data-state='speaking'] .himi-wave {
+  animation: himi-wave 0.7s ease-in-out infinite;
+}
+
+.himi-robot[data-state='speaking'] .himi-wave-2 {
+  animation-delay: 0.15s;
+}
+
+.himi-robot[data-state='speaking'] .himi-wave-3 {
+  animation-delay: 0.3s;
+}
+
+.himi-robot[data-state='teaching'] .himi-book {
+  animation: himi-page 2.2s ease-in-out infinite;
+}
+
+.himi-robot[data-state='celebrating'] .himi-body {
+  animation: himi-hop 0.7s ease-in-out infinite;
+}
+
+.himi-robot[data-state='celebrating'] .himi-ray {
+  animation: himi-ray-pulse 0.5s ease-in-out infinite;
+}
+
+.himi-robot[data-state='celebrating'] .himi-spark {
+  animation: himi-spark 1.1s ease-in-out infinite;
+}
+
+.himi-robot[data-state='celebrating'] .himi-spark-2 {
+  animation-delay: 0.2s;
+}
+
+.himi-robot[data-state='celebrating'] .himi-spark-3 {
+  animation-delay: 0.4s;
+}
+
+.himi-robot[data-state='celebrating'] .himi-spark-4 {
+  animation-delay: 0.6s;
+}
+
+/* A calm one-off head shake, then it holds still: a failure is not something to keep animating. */
+.himi-robot[data-state='error'] .himi-body {
+  animation: himi-shake 0.6s ease-in-out 1;
+}
+
+.himi-robot[data-state='error'] .himi-eye,
+.himi-robot[data-state='listening'] .himi-eye,
+.himi-robot[data-state='thinking'] .himi-eye {
+  animation: none;
+}
+
+@keyframes himi-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes himi-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes himi-sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+@keyframes himi-ray-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes himi-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes himi-talk {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes himi-wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.1); }
+}
+
+@keyframes himi-page {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-2px) scaleY(1.06); }
+}
+
+@keyframes himi-hop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes himi-spark {
+  0%, 100% { transform: scale(0.5) rotate(0deg); opacity: 0.2; }
+  50% { transform: scale(1.15) rotate(25deg); opacity: 1; }
+}
+
+@keyframes himi-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The poses stay (face, brows, badge); only the loops stop. */
+  .himi-robot *,
+  .himi-robot {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

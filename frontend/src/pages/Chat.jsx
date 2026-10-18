@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { FiClock, FiMessageCircle, FiPlus, FiZap } from 'react-icons/fi';
-import AssistantAvatar from '../components/avatar/AssistantAvatar';
+import ChatRobot from '../components/companion/ChatRobot';
 import ChatComposer from '../components/chat/ChatComposer';
 import ChatMessage from '../components/chat/ChatMessage';
 import ChatSidebar from '../components/chat/ChatSidebar';
@@ -238,7 +238,7 @@ export default function Chat() {
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <AssistantAvatar className="animate-float" />
+                <ChatRobot className="h-32 w-32" />
                 <h2 className="mt-6 text-2xl font-bold text-slate-950">Hi {firstName}, what shall we learn today?</h2>
                 <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
                   Ask me anything about <SubjectBadge subject={selectedSubject} className="align-middle" />. I will
@@ -287,7 +287,7 @@ export default function Chat() {
           <Card>
             <p className="eyebrow">AI information</p>
             <div className="mt-4 flex items-center gap-4">
-              <AssistantAvatar size="md" />
+              <ChatRobot className="h-20 w-20 shrink-0" />
               <div>
                 <p className="font-semibold text-slate-900">HIMI Mentor</p>
                 <p className="text-sm text-slate-600">Patient, step-by-step engineering guide.</p>

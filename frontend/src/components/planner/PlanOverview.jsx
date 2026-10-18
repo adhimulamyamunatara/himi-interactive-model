@@ -2,6 +2,8 @@ import { FiAlertTriangle, FiAward, FiInfo, FiRefreshCw, FiTrash2 } from 'react-i
 import Badge, { SubjectBadge } from '../common/Badge';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import AskHimiButton from '../companion/AskHimiButton';
+import { planPrompt } from '../../utils/companionPrompts';
 import ProgressBar from '../common/ProgressBar';
 import ProgressRing from '../common/ProgressRing';
 import {
@@ -91,6 +93,13 @@ export default function PlanOverview({ record, today, onRegenerate, onDelete }) 
             <strong className="text-slate-900">{Math.round(progress.percentage)}%</strong> complete · {formatMinutes(progress.completedMinutes)} of{' '}
             {formatMinutes(progress.totalMinutes)} studied
           </p>
+          <div className="mt-4">
+            <AskHimiButton
+              size="sm"
+              label="Ask HIMI how to approach this plan"
+              prompt={planPrompt({ subjects: plan.subjects, daysLeft: passed ? null : daysLeft, remainingTasks: progress.remainingTasks, totalTasks: progress.totalTasks })}
+            />
+          </div>
         </div>
       </div>
 

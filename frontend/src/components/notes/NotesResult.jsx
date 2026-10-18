@@ -1,7 +1,9 @@
 import { FiCheck, FiCopy } from 'react-icons/fi';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
+import { notesPrompt } from '../../utils/companionPrompts';
 import { summaryToPlainText } from '../../utils/notes';
 import Button from '../common/Button';
+import AskHimiButton from '../companion/AskHimiButton';
 
 function Block({ title, children }) {
   return (
@@ -24,6 +26,7 @@ export default function NotesResult({ title, notes, actions }) {
           <Button variant="secondary" size="sm" onClick={() => copy(summaryToPlainText(notes, title))}>
             {copied ? <FiCheck aria-hidden="true" /> : <FiCopy aria-hidden="true" />} {copied ? 'Copied' : 'Copy'}
           </Button>
+          <AskHimiButton size="sm" label="Ask HIMI to quiz me" prompt={notesPrompt({ title, summary: notes.summary })} />
           {actions}
         </div>
       </div>

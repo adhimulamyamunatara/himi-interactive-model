@@ -9,8 +9,9 @@ import { getSpeechOutput } from '../../utils/speechOutput';
 /**
  * Reads one assistant reply aloud on request, with Stop and Replay. Hidden in browsers without speech
  * synthesis, where the reply simply stays text. Audio is produced by the browser; nothing is sent to HIMI.
+ * `alwaysVisible` keeps it on screen without hovering (used by the companion).
  */
-export default function ListenButton({ messageId, text }) {
+export default function ListenButton({ messageId, text, alwaysVisible = false }) {
   const { t } = useT();
   const { supported, speakingId, lastId, errorId, error, speak, stop } = useSpeechOutput();
   const lang = detectSpeechLang(text);
@@ -47,7 +48,7 @@ export default function ListenButton({ messageId, text }) {
         aria-label={description}
         aria-pressed={speaking}
         className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition hover:bg-slate-100 hover:text-slate-900 focus-visible:opacity-100 ${
-          speaking ? 'bg-blue-50 text-blue-700 opacity-100' : 'text-slate-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+          speaking ? 'bg-blue-50 text-blue-700 opacity-100' : alwaysVisible ? 'text-slate-600 opacity-100' : 'text-slate-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
         }`}
       >
         <Icon aria-hidden="true" /> {label}

@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { ChatProvider } from './context/ChatContext';
+import { CompanionProvider } from './context/CompanionContext';
 import { ToastProvider } from './context/ToastContext';
 import { I18nProvider } from './i18n/I18nContext';
 import { UserProvider } from './context/UserContext';
@@ -17,7 +18,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ToastProvider>
             <UserProvider>
               <ChatProvider>
-                <App />
+                <CompanionProvider>
+                  <App />
+                </CompanionProvider>
               </ChatProvider>
             </UserProvider>
           </ToastProvider>

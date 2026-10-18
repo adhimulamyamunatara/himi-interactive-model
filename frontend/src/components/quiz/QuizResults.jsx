@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiCheck, FiHome, FiMinus, FiRefreshCw, FiSliders, FiX } from 'react-icons/fi';
+import { useCompanion } from '../../context/CompanionContext';
+import { useT } from '../../i18n/I18nContext';
+import { quizReviewPrompt } from '../../utils/companionPrompts';
 import { getPerformance } from '../../utils/quiz';
 import MarkdownMessage from '../chat/MarkdownMessage';
 import Badge, { SubjectBadge } from '../common/Badge';
 import Button from '../common/Button';
+import AskHimiButton from '../companion/AskHimiButton';
 import Card from '../common/Card';
 import ProgressRing from '../common/ProgressRing';
 import SegmentedControl from '../common/SegmentedControl';
@@ -126,8 +130,19 @@ function ReviewItem({ item, number }) {
  * Score summary plus a question-by-question review with explanations.
  */
 export default function QuizResults({ quiz, results, onRetry, onNewQuiz }) {
+  const { t } = useT();
+  const { celebrate } = useCompanion();
   const [filter, setFilter] = useState('all');
   const performance = getPerformance(results.percentage);
+
+  // HIMI celebrates a good result (60% and up) for a few seconds. A weaker score is not cheered; it gets help instead.
+  useEffect(() => {
+    if (results.percentage >= 60) {
+      celebrate();
+    }
+  }, [celebrate, results.percentage]);
+
+  const missedQuestions = results.items.filter((item) => !item.isCorrect).map((item) => item.question.question);
   const needsReview = results.total - results.correct;
 
   const filterOptions = useMemo(
@@ -174,6 +189,10 @@ export default function QuizResults({ quiz, results, onRetry, onNewQuiz }) {
             <Button variant="secondary" onClick={onNewQuiz}>
               <FiSliders aria-hidden="true" /> Change quiz options
             </Button>
+            <AskHimiButton
+              label={missedQuestions.length > 0 ? t('companion.askQuizMistakes') : t('companion.askQuizNext')}
+              prompt={quizReviewPrompt({ subject: quiz.subject, topic: quiz.topic, correct: results.correct, total: results.total, missedQuestions })}
+            />
             <Button variant="ghost" to="/dashboard">
               <FiHome aria-hidden="true" /> Back to dashboard
             </Button>
