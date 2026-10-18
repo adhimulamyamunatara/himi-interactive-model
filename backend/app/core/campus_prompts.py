@@ -38,7 +38,8 @@ CLASSROOM_CONTRACT = (
     '  "keyPoints": ["up to 6 short key points"],\n'
     '  "revisionQuestions": [ {"question": "a question the student should try to answer", "hint": "a short hint, not the answer"} ]\n'
     "}\n"
-    "Write between 3 and 5 revision questions."
+    "You MUST write at least 3 and at most 5 revision questions, each about a different idea in the material, "
+    "even when the material is short (then ask about the basics that were covered)."
 )
 
 
