@@ -5,6 +5,7 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { formatTime } from '../../utils/formatters';
 import AssistantAvatar from '../avatar/AssistantAvatar';
 import { SubjectBadge } from '../common/Badge';
+import ListenButton from '../voice/ListenButton';
 import UserAvatar from '../common/UserAvatar';
 import MarkdownMessage from './MarkdownMessage';
 
@@ -73,6 +74,7 @@ function AssistantBubble({ message, onRetry, disabled }) {
             {copied ? <FiCheck aria-hidden="true" className="text-emerald-600" /> : <FiCopy aria-hidden="true" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
+          <ListenButton messageId={message.id} text={message.content} />
         </div>
       </div>
     </div>

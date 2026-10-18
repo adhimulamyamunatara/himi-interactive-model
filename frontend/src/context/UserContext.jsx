@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { DEFAULT_AVATAR_COLOR, isAvatarColor, isValidAvatarDataUrl } from '../utils/avatar';
+import { getSpeechOutput } from '../utils/speechOutput';
 import { normalizeStoredUser } from '../utils/userProfile';
 
 const USER_STORAGE_KEY = 'himi.user';
@@ -68,6 +69,7 @@ export function UserProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    getSpeechOutput().stop();
     setUser(null);
     window.localStorage.removeItem(USER_STORAGE_KEY);
   }, []);

@@ -11,6 +11,7 @@ import Card from '../components/common/Card';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Drawer from '../components/common/Drawer';
 import Select from '../components/common/Select';
+import { useStopSpeechOnLeave } from '../hooks/useSpeechOutput';
 import { useChat } from '../context/ChatContext';
 import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
@@ -55,6 +56,9 @@ export default function Chat() {
   const scrollRef = useRef(null);
   const isFirstScrollRef = useRef(true);
   const lastConversationRef = useRef(activeConversationId);
+
+  // Replies read aloud stop when another chat opens, when this one is deleted, and when leaving the page.
+  useStopSpeechOnLeave(activeConversationId);
 
   // Learning stats cover everything the student has asked, across all conversations.
   const stats = useMemo(() => {
@@ -148,10 +152,6 @@ export default function Chat() {
     toast.success('Chat deleted', title ? `"${title}" was removed. Your other chats are untouched.` : undefined);
   };
 
-  const handleVoice = () => {
-    toast.info('Voice input is coming soon', 'Speech features arrive in a later phase of HIMI.');
-  };
-
   const firstName = user?.name?.split(' ')[0] ?? 'there';
 
   const sidebar = (
@@ -242,7 +242,7 @@ export default function Chat() {
             <AnimatePresence>{loading ? <TypingIndicator key="typing" /> : null}</AnimatePresence>
           </div>
 
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6">
+          <footer className="scrollbar-thin max-h-[65%] overflow-y-auto border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6">
             <div
               className="scrollbar-thin -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1"
               role="group"
@@ -261,7 +261,7 @@ export default function Chat() {
                 </button>
               ))}
             </div>
-            <ChatComposer onSend={sendMessage} onVoice={handleVoice} disabled={loading} subject={selectedSubject} />
+            <ChatComposer onSend={sendMessage} disabled={loading} subject={selectedSubject} voiceKey={activeConversationId} />
           </footer>
         </Card>
 

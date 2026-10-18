@@ -1,16 +1,38 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FiMic, FiSend } from 'react-icons/fi';
 import { useAutoResizeTextarea } from '../../hooks/useAutoResizeTextarea';
+import { useSpeechInput } from '../../hooks/useSpeechInput';
+import { appendTranscript } from '../../utils/speechText';
+import VoicePanel from '../voice/VoicePanel';
 
 const MAX_LENGTH = 2000;
 
 /**
  * Message box with an auto-growing textarea. Enter sends, Shift+Enter inserts a new line.
+ * Dictation (opt-in, from the mic button) only adds text to the box; sending is always the student's action.
+ * `voiceKey` is the id of the open conversation: changing it cancels any dictation in progress.
  */
-export default function ChatComposer({ onSend, onVoice, disabled = false, subject }) {
+export default function ChatComposer({ onSend, disabled = false, subject, voiceKey = null }) {
   const [draft, setDraft] = useState('');
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const textareaRef = useAutoResizeTextarea(draft);
   const canSend = !disabled && draft.trim().length > 0;
+
+  const addTranscript = useCallback((text) => setDraft((current) => appendTranscript(current, text, MAX_LENGTH).value), []);
+  const voice = useSpeechInput({ resetKey: voiceKey, onTranscript: addTranscript });
+
+  const toggleVoice = () => {
+    if (voiceOpen) {
+      voice.cancel();
+    }
+
+    setVoiceOpen(!voiceOpen);
+  };
+
+  const closeVoice = () => {
+    voice.cancel();
+    setVoiceOpen(false);
+  };
 
   const submit = () => {
     if (!canSend) {
@@ -18,6 +40,7 @@ export default function ChatComposer({ onSend, onVoice, disabled = false, subjec
     }
 
     const content = draft;
+    voice.cancel();
     setDraft('');
     onSend(content);
   };
@@ -39,6 +62,7 @@ export default function ChatComposer({ onSend, onVoice, disabled = false, subjec
       onSubmit={handleSubmit}
       className="rounded-3xl border border-slate-200 bg-white p-3 shadow-card transition focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100"
     >
+      {voiceOpen ? <VoicePanel voice={voice} onClose={closeVoice} /> : null}
       <label htmlFor="chat-message" className="sr-only">
         Message HIMI about {subject}
       </label>
@@ -67,9 +91,16 @@ export default function ChatComposer({ onSend, onVoice, disabled = false, subjec
           ) : null}
           <button
             type="button"
-            onClick={onVoice}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600"
-            aria-label="Voice input (coming soon)"
+            onClick={toggleVoice}
+            aria-pressed={voiceOpen}
+            aria-label="Voice input"
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 ${
+              voice.status === 'listening'
+                ? 'animate-pulse border-rose-300 bg-rose-50 text-rose-600'
+                : voiceOpen
+                  ? 'border-blue-300 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600'
+            }`}
           >
             <FiMic aria-hidden="true" />
           </button>
