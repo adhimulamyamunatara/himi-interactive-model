@@ -34,6 +34,10 @@ class Settings:
     gemini_notes_model: str = field(
         default_factory=lambda: os.getenv("GEMINI_NOTES_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     )
+    # Optional: a model for the tutor agents. Falls back to GEMINI_MODEL when unset.
+    gemini_tutor_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_TUTOR_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    )
 
  
 settings = Settings()
