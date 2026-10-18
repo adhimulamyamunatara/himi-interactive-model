@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BrandLogo from '../common/BrandLogo';
 import { MEMBER_PAGES } from '../../utils/navigation';
 
 const PRODUCT_LINKS = [
@@ -13,12 +14,7 @@ export default function Footer() {
     <footer className="mt-10 border-t border-slate-200/80 bg-white/70">
       <div className="section-shell grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gradient font-bold text-white shadow-glow">
-              H
-            </div>
-            <p className="text-lg font-bold text-slate-950">HIMI</p>
-          </div>
+          <BrandLogo variant="horizontal" className="h-12" />
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
             Human Inspired Multimodal Interaction Model: an AI learning companion that aims to teach engineering
             students like a patient human mentor.

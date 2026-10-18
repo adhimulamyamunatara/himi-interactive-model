@@ -18,7 +18,7 @@ export const AVATAR_COLORS = [
   { key: 'ocean', label: 'Ocean', classes: 'from-blue-600 via-indigo-600 to-cyan-500' },
   { key: 'sunset', label: 'Sunset', classes: 'from-orange-600 via-rose-600 to-pink-600' },
   { key: 'forest', label: 'Forest', classes: 'from-emerald-700 via-teal-600 to-emerald-500' },
-  { key: 'violet', label: 'Violet', classes: 'from-violet-700 via-purple-600 to-fuchsia-500' },
+  { key: 'violet', label: 'Violet', classes: 'from-violet-700 via-violet-600 to-indigo-500' },
   { key: 'slate', label: 'Slate', classes: 'from-slate-800 via-slate-700 to-slate-500' }
 ];
 

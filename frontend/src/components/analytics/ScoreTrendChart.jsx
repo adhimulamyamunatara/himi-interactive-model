@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { chartColors } from '../../styles/tokens';
 import { REVISION_THRESHOLD } from '../../utils/analytics';
 import { formatPlanDate } from '../../utils/studyPlanner';
 
@@ -33,8 +34,8 @@ export default function ScoreTrendChart({ points }) {
 
         {[0, 50, 100].map((tick) => (
           <g key={tick}>
-            <line x1={PAD.left} x2={WIDTH - PAD.right} y1={y(tick)} y2={y(tick)} stroke="#e2e8f0" strokeWidth="1" />
-            <text x={PAD.left - 8} y={y(tick) + 4} textAnchor="end" fontSize="11" fill="#475569">
+            <line x1={PAD.left} x2={WIDTH - PAD.right} y1={y(tick)} y2={y(tick)} stroke={chartColors.grid} strokeWidth="1" />
+            <text x={PAD.left - 8} y={y(tick) + 4} textAnchor="end" fontSize="11" fill={chartColors.axis}>
               {tick}%
             </text>
           </g>
@@ -45,26 +46,26 @@ export default function ScoreTrendChart({ points }) {
           x2={WIDTH - PAD.right}
           y1={y(REVISION_THRESHOLD)}
           y2={y(REVISION_THRESHOLD)}
-          stroke="#f59e0b"
+          stroke={chartColors.threshold}
           strokeWidth="1.5"
           strokeDasharray="5 4"
         />
-        <text x={WIDTH - PAD.right} y={y(REVISION_THRESHOLD) - 5} textAnchor="end" fontSize="10" fill="#92400e">
+        <text x={WIDTH - PAD.right} y={y(REVISION_THRESHOLD) - 5} textAnchor="end" fontSize="10" fill={chartColors.thresholdLabel}>
           {REVISION_THRESHOLD}% revision line
         </text>
 
-        {points.length > 1 ? <path d={path} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" /> : null}
+        {points.length > 1 ? <path d={path} fill="none" stroke={chartColors.line} strokeWidth="2.5" strokeLinejoin="round" /> : null}
 
         {points.map((point, index) => (
           <g key={point.id}>
-            <circle cx={x(index, points.length)} cy={y(point.percentage)} r="5" fill="#2563eb" stroke="#fff" strokeWidth="2" />
+            <circle cx={x(index, points.length)} cy={y(point.percentage)} r="5" fill={chartColors.line} stroke="#fff" strokeWidth="2" />
             {points.length <= 8 || index === points.length - 1 ? (
-              <text x={x(index, points.length)} y={y(point.percentage) - 10} textAnchor="middle" fontSize="11" fontWeight="600" fill="#1e293b">
+              <text x={x(index, points.length)} y={y(point.percentage) - 10} textAnchor="middle" fontSize="11" fontWeight="600" fill={chartColors.label}>
                 {round(point.percentage)}%
               </text>
             ) : null}
             {points.length <= 8 || index === 0 || index === points.length - 1 ? (
-              <text x={x(index, points.length)} y={HEIGHT - 12} textAnchor="middle" fontSize="10" fill="#475569">
+              <text x={x(index, points.length)} y={HEIGHT - 12} textAnchor="middle" fontSize="10" fill={chartColors.axis}>
                 {formatPlanDate(point.date, 'short')}
               </text>
             ) : null}

@@ -11,7 +11,7 @@ export default function ProgressBar({ percentage, label, className = '' }) {
       aria-valuemax={100}
       aria-valuenow={Math.round(clamped)}
     >
-      <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-500" style={{ width: `${clamped}%` }} />
+      <div className="h-full rounded-full bg-learn-gradient transition-all duration-500" style={{ width: `${clamped}%` }} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { chartColors } from '../../styles/tokens';
 import { BOARD_HEIGHT, BOARD_WIDTH, appendPoint, buildShape, toLogicalPoint } from '../../utils/whiteboard';
 import { drawBoard, drawShape } from '../../utils/whiteboardRender';
 
@@ -54,7 +55,7 @@ export default function WhiteboardCanvas({ shapes, tool, color, size, textAnchor
       }
     } else if (propsRef.current.tool === 'text' && anchor) {
       // A small marker shows where the next piece of text will go.
-      context.strokeStyle = '#2563eb';
+      context.strokeStyle = chartColors.line;
       context.lineWidth = 2;
       context.beginPath();
       context.moveTo(anchor[0] - 10, anchor[1]);

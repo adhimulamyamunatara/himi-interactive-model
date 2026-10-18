@@ -2,9 +2,9 @@ import Card from '../common/Card';
 
 const ACCENTS = {
   blue: { icon: 'from-blue-500 to-cyan-400', glow: 'shadow-blue-500/30' },
-  purple: { icon: 'from-violet-500 to-fuchsia-400', glow: 'shadow-violet-500/30' },
-  cyan: { icon: 'from-cyan-500 to-sky-400', glow: 'shadow-cyan-500/30' },
-  amber: { icon: 'from-amber-500 to-orange-400', glow: 'shadow-amber-500/30' }
+  purple: { icon: 'from-violet-500 to-indigo-400', glow: 'shadow-violet-500/30' },
+  cyan: { icon: 'from-cyan-500 to-blue-400', glow: 'shadow-cyan-500/30' },
+  amber: { icon: 'from-amber-500 to-amber-400', glow: 'shadow-amber-500/30' }
 };
 
 /** Single KPI tile with a gradient icon badge. */

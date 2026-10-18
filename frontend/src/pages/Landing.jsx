@@ -13,6 +13,7 @@ import {
 import { SiFastapi, SiFramer, SiGooglegemini, SiReact, SiTailwindcss, SiVite } from 'react-icons/si';
 import AssistantAvatar from '../components/avatar/AssistantAvatar';
 import Badge from '../components/common/Badge';
+import BrandLogo from '../components/common/BrandLogo';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Reveal from '../components/common/Reveal';
@@ -83,10 +84,10 @@ const ROADMAP = [
 ];
 
 const TECHNOLOGIES = [
-  { icon: SiReact, name: 'React 19', text: 'Component-based UI with routing and context state.', color: 'text-sky-500' },
+  { icon: SiReact, name: 'React 19', text: 'Component-based UI with routing and context state.', color: 'text-cyan-500' },
   { icon: SiVite, name: 'Vite', text: 'Lightning-fast dev server and optimised builds.', color: 'text-violet-500' },
-  { icon: SiTailwindcss, name: 'Tailwind CSS', text: 'A consistent, responsive design system.', color: 'text-cyan-500' },
-  { icon: SiFramer, name: 'Framer Motion', text: 'Smooth transitions and micro-interactions.', color: 'text-fuchsia-500' },
+  { icon: SiTailwindcss, name: 'Tailwind CSS', text: 'A consistent, responsive design system.', color: 'text-teal-500' },
+  { icon: SiFramer, name: 'Framer Motion', text: 'Smooth transitions and micro-interactions.', color: 'text-indigo-500' },
   { icon: SiFastapi, name: 'FastAPI', text: 'A typed, modular Python API layer.', color: 'text-emerald-500' },
   { icon: SiGooglegemini, name: 'Gemini', text: 'The language model behind every answer.', color: 'text-blue-600' }
 ];
@@ -213,6 +214,9 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mx-auto w-full max-w-md"
           >
+            <div className="mb-4 hidden justify-center lg:flex" aria-hidden="true">
+              <BrandLogo variant="mark" alt="" className="h-28 animate-float drop-shadow-[0_12px_24px_rgba(63,78,224,0.25)]" />
+            </div>
             <HeroChatPreview />
           </motion.div>
         </div>

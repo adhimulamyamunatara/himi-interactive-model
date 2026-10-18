@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { motion } from 'framer-motion';
+import { chartColors } from '../../styles/tokens';
 
 /**
  * Animated circular progress indicator.
@@ -25,12 +26,12 @@ export default function ProgressRing({ value, size = 140, strokeWidth = 12, labe
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2563eb" />
-            <stop offset="55%" stopColor="#7c3aed" />
-            <stop offset="100%" stopColor="#06b6d4" />
+            <stop offset="0%" stopColor={chartColors.ringStops[0]} />
+            <stop offset="55%" stopColor={chartColors.ringStops[1]} />
+            <stop offset="100%" stopColor={chartColors.ringStops[2]} />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={strokeWidth} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={chartColors.ringTrack} strokeWidth={strokeWidth} />
         <motion.circle
           cx={size / 2}
           cy={size / 2}

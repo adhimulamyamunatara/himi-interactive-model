@@ -5,7 +5,7 @@ const BASE_CLASSES =
 
 const VARIANTS = {
   primary:
-    'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-glow enabled:hover:-translate-y-0.5 enabled:hover:shadow-xl',
+    'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white shadow-glow enabled:hover:-translate-y-0.5 enabled:hover:shadow-xl',
   secondary:
     'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-blue-200 hover:bg-slate-50',
   ghost: 'bg-transparent text-slate-700 hover:bg-slate-100',
