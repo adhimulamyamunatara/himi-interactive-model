@@ -20,9 +20,10 @@ import { calculateStreak, getSubjectActivity } from '../utils/messageModel';
 import { SUBJECTS } from '../utils/subjects';
 
 const UPCOMING = [
-  'Voice conversations',
-  'Long-term memory and personalised learning',
-  'Avatar-based mentor'
+  'Hands-free spoken conversations',
+  'Animated mentor avatar',
+  'Camera and emotion awareness',
+  'Accounts and sync across devices'
 ];
 
 const container = {

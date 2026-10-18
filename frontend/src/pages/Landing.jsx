@@ -47,7 +47,7 @@ const FEATURES = [
   {
     icon: FiEye,
     title: 'Built to grow',
-    text: 'A clean foundation ready for voice, memory and vision in the next phases.'
+    text: 'A clean foundation that now includes memory, notes, quizzes and voice, with vision to come.'
   }
 ];
 
@@ -69,16 +69,16 @@ const ROADMAP = [
   {
     phase: 'Phase 2',
     title: 'Smarter mentor',
-    status: 'Planned',
-    tone: 'blue',
-    items: ['Long-term memory', 'PDF upload and notes summaries', 'Quiz generator and study planner', 'Learning analytics']
+    status: 'Live now',
+    tone: 'emerald',
+    items: ['Learning memory and personalisation', 'PDF upload and notes summaries', 'Quizzes, study planner and progress', 'Whiteboard, voice input and read-aloud']
   },
   {
     phase: 'Phase 3',
     title: 'Human-like companion',
     status: 'Future',
     tone: 'purple',
-    items: ['Camera and emotion awareness', 'Voice conversations', 'Animated avatar', 'Multi-agent architecture']
+    items: ['Camera and emotion awareness', 'Hands-free voice conversations', 'Animated mentor avatar', 'Multi-agent architecture']
   }
 ];
 
