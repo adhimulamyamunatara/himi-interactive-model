@@ -32,7 +32,10 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   // the device's files does not depend on it.
   cameraEnabled: true,
   // Appearance: follows the device unless the student picks light or dark.
-  theme: 'system'
+  theme: 'system',
+  // The HIMI companion panel: whether the student left it expanded. Only the open/closed state is stored,
+  // never the conversation.
+  companionOpen: false
 });
 
 export const isLanguageCode = (value) => LANGUAGES.some((language) => language.code === value);
@@ -50,7 +53,8 @@ export function normalizePreferences(raw) {
     voiceEnabled: typeof source.voiceEnabled === 'boolean' ? source.voiceEnabled : DEFAULT_PREFERENCES.voiceEnabled,
     autoReadReplies: typeof source.autoReadReplies === 'boolean' ? source.autoReadReplies : DEFAULT_PREFERENCES.autoReadReplies,
     cameraEnabled: typeof source.cameraEnabled === 'boolean' ? source.cameraEnabled : DEFAULT_PREFERENCES.cameraEnabled,
-    theme: isTheme(source.theme) ? source.theme : DEFAULT_PREFERENCES.theme
+    theme: isTheme(source.theme) ? source.theme : DEFAULT_PREFERENCES.theme,
+    companionOpen: typeof source.companionOpen === 'boolean' ? source.companionOpen : DEFAULT_PREFERENCES.companionOpen
   };
 }
 

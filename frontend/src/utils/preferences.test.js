@@ -142,3 +142,22 @@ test('the theme choice is saved and reloaded', () => {
   assert.equal(JSON.parse(storage.data.get(PREFERENCES_STORAGE_KEY)).preferences.theme, 'dark');
   assert.equal(loadPreferences(storage).preferences.theme, 'dark');
 });
+
+test('the companion panel is closed by default, old saved preferences still load, and only a boolean is kept', () => {
+  assert.equal(DEFAULT_PREFERENCES.companionOpen, false);
+  assert.equal(normalizePreferences({ uiLanguage: 'te' }).companionOpen, false);
+  assert.equal(normalizePreferences({ companionOpen: true }).companionOpen, true);
+  assert.equal(normalizePreferences({ companionOpen: 'yes' }).companionOpen, false);
+  assert.equal(normalizePreferences({ companionOpen: 1 }).companionOpen, false);
+});
+
+test('the companion open state is saved without storing any conversation', () => {
+  const storage = memoryStorage();
+  const store = createPreferencesStore({ storage });
+
+  store.update({ companionOpen: true });
+  const saved = JSON.parse(storage.data.get(PREFERENCES_STORAGE_KEY));
+
+  assert.equal(saved.preferences.companionOpen, true);
+  assert.deepEqual(Object.keys(saved.preferences).sort(), Object.keys(DEFAULT_PREFERENCES).sort());
+});
