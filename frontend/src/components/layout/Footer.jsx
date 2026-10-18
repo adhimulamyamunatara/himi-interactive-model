@@ -5,6 +5,7 @@ const PRODUCT_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/chat', label: 'Chat' },
   { to: '/quiz', label: 'Quiz' },
+  { to: '/study-planner', label: 'Study Planner' },
   { to: '/profile', label: 'Profile' }
 ];
 

@@ -14,6 +14,7 @@ const MEMBER_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/chat', label: 'Chat' },
   { to: '/quiz', label: 'Quiz' },
+  { to: '/study-planner', label: 'Planner' },
   { to: '/profile', label: 'Profile' }
 ];
 
@@ -59,7 +60,7 @@ export default function Navbar() {
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">HIMI</p>
-            <p className="hidden text-xs text-slate-500 md:block">Human Inspired Multimodal Interaction Model</p>
+            <p className="hidden text-xs text-slate-500 md:block lg:hidden xl:block">Human Inspired Multimodal Interaction Model</p>
           </div>
         </Link>
 

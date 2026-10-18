@@ -26,6 +26,10 @@ class Settings:
     gemini_quiz_model: str = field(
         default_factory=lambda: os.getenv("GEMINI_QUIZ_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     )
+    # Optional: a faster model for the study planner. Falls back to GEMINI_MODEL when unset.
+    gemini_planner_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_PLANNER_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    )
 
  
 settings = Settings()

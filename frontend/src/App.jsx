@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Quiz = lazy(() => import('./pages/Quiz'));
+const StudyPlanner = lazy(() => import('./pages/StudyPlanner'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function ProtectedRoute({ children }) {
@@ -53,6 +54,7 @@ export default function App() {
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
                   <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+                  <Route path="/study-planner" element={<ProtectedRoute><StudyPlanner /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
