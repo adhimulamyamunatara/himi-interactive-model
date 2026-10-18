@@ -1,64 +1,65 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-import Navbar from './components/layout/Navbar';
+import { lazy, Suspense, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { PageSkeleton } from './components/common/Skeleton';
 import Footer from './components/layout/Footer';
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Chat from './pages/Chat';
-import Profile from './pages/Profile';
-import NotFound from './pages/NotFound';
+import Navbar from './components/layout/Navbar';
+import PageTransition from './components/layout/PageTransition';
 import { useUser } from './context/UserContext';
+
+// Route-level code splitting keeps the first load small.
+const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Profile = lazy(() => import('./pages/Profile'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useUser();
 
   if (loading) {
-    return null;
+    return <PageSkeleton />;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  return user ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
+  const location = useLocation();
+  const isChatRoute = location.pathname === '/chat';
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+      <main id="main-content" className="flex-1">
+        <AnimatePresence mode="wait" initial={false}>
+          <PageTransition key={location.pathname}>
+            {/* Keyed by the transition, so a crashed page resets as soon as the user navigates. */}
+            <ErrorBoundary>
+              <Suspense fallback={<PageSkeleton />}>
+                <Routes location={location}>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </PageTransition>
+        </AnimatePresence>
       </main>
-      <Footer />
+      {isChatRoute ? null : <Footer />}
     </div>
   );
 }

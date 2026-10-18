@@ -1,22 +1,21 @@
-export default function Avatar({ name = 'HIMI', size = 'md' }) {
-  const dimensions = {
-    sm: 'h-10 w-10 text-sm',
-    md: 'h-12 w-12 text-base',
-    lg: 'h-16 w-16 text-lg',
-    xl: 'h-24 w-24 text-3xl'
-  };
+import { getInitials } from '../../utils/formatters';
 
+const SIZES = {
+  sm: 'h-10 w-10 rounded-2xl text-sm',
+  md: 'h-14 w-14 rounded-2xl text-base',
+  lg: 'h-20 w-20 rounded-3xl text-xl',
+  xl: 'h-28 w-28 rounded-[2rem] text-3xl'
+};
+
+/** Gradient initials avatar used as a profile picture placeholder. */
+export default function Avatar({ name = '', size = 'md', className = '' }) {
   return (
     <div
-      className={`flex items-center justify-center rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-400 font-bold text-white shadow-soft ${dimensions[size]}`}
-      aria-label={name}
+      role="img"
+      aria-label={name ? `Avatar for ${name}` : 'Avatar'}
+      className={`flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-400 font-bold text-white shadow-card ${SIZES[size]} ${className}`}
     >
-      {name
-        .split(' ')
-        .map((part) => part[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()}
+      {getInitials(name)}
     </div>
   );
 }

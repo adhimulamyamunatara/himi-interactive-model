@@ -1,44 +1,70 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FiArrowRight, FiMenu } from 'react-icons/fi';
-import Button from '../common/Button';
-import Avatar from '../common/Avatar';
+import { useCallback, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { FiArrowRight, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { useChat } from '../../context/ChatContext';
+import { useToast } from '../../context/ToastContext';
 import { useUser } from '../../context/UserContext';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import Avatar from '../common/Avatar';
+import Button from '../common/Button';
+
+const PUBLIC_LINKS = [{ to: '/', label: 'Home' }];
+const MEMBER_LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/chat', label: 'Chat' },
+  { to: '/profile', label: 'Profile' }
+];
+
+const desktopLinkClass = ({ isActive }) =>
+  `rounded-full px-4 py-2 text-sm font-medium transition ${
+    isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+  }`;
+
+const mobileLinkClass = ({ isActive }) =>
+  `rounded-2xl px-4 py-3 text-base font-medium transition ${
+    isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50'
+  }`;
 
 export default function Navbar() {
   const { user, logout } = useUser();
+  const { clearConversation } = useChat();
+  const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Remember which path the menu was opened on so it closes automatically after navigation.
+  const [menuPath, setMenuPath] = useState(null);
+  const menuOpen = menuPath === location.pathname;
 
-  const navItems = [
-    { to: '/', label: 'Home' },
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/chat', label: 'Chat' },
-    { to: '/profile', label: 'Profile' }
-  ];
+  const links = user ? [...PUBLIC_LINKS, ...MEMBER_LINKS] : PUBLIC_LINKS;
+  const closeMenu = useCallback(() => setMenuPath(null), []);
+
+  useEscapeKey(closeMenu, menuOpen);
+
+  const handleLogout = () => {
+    clearConversation();
+    logout();
+    closeMenu();
+    toast.success('Signed out', 'Your local session and chat history were cleared.');
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
-      <div className="section-shell flex items-center justify-between py-4">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 text-lg font-bold text-white shadow-soft">
+      <div className="section-shell flex items-center justify-between gap-4 py-4">
+        <Link to="/" className="flex items-center gap-3" aria-label="HIMI home">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-gradient text-lg font-bold text-white shadow-glow">
             H
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">HIMI</p>
-            <p className="text-xs text-slate-500">Human Inspired Multimodal Interaction Model</p>
+            <p className="hidden text-xs text-slate-500 md:block">Human Inspired Multimodal Interaction Model</p>
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 lg:flex">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `rounded-full px-4 py-2 text-sm font-medium transition ${
-                  isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }
-            >
+        <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-sm lg:flex" aria-label="Main">
+          {links.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.to === '/'} className={desktopLinkClass}>
               {item.label}
             </NavLink>
           ))}
@@ -47,36 +73,77 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 sm:flex">
-                <Avatar name={user.name} size="sm" />
+              <Link
+                to="/profile"
+                className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 transition hover:border-blue-200 sm:flex"
+              >
+                <Avatar name={user.name} size="sm" className="!h-8 !w-8 !rounded-xl !text-xs" />
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-                  <p className="text-xs text-slate-500">Student account</p>
+                  <p className="max-w-[9rem] truncate text-sm font-semibold leading-tight text-slate-900">{user.name}</p>
+                  <p className="text-xs text-slate-500">Student</p>
                 </div>
-              </div>
-              <Button variant="secondary" onClick={() => logout()}>
-                Logout
+              </Link>
+              <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={handleLogout}>
+                <FiLogOut aria-hidden="true" /> Logout
               </Button>
             </>
           ) : (
             <>
-              <Button
-                variant="secondary"
-                className="hidden sm:inline-flex"
-                onClick={() => navigate('/login')}
-              >
+              <Button variant="secondary" size="sm" className="hidden sm:inline-flex" to="/login">
                 Login
               </Button>
-              <Button onClick={() => navigate('/login')}>
-                Start Learning <FiArrowRight />
+              <Button size="sm" to="/login">
+                Start Learning <FiArrowRight aria-hidden="true" />
               </Button>
             </>
           )}
-          <button className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 lg:hidden">
-            <FiMenu />
+          <button
+            type="button"
+            onClick={() => setMenuPath(menuOpen ? null : location.pathname)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 lg:hidden"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+          >
+            {menuOpen ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {menuOpen ? (
+          <motion.nav
+            id="mobile-menu"
+            aria-label="Mobile"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-slate-200/70 bg-white/95 lg:hidden"
+          >
+            <div className="section-shell flex flex-col gap-1 py-4">
+              {links.map((item) => (
+                <NavLink key={item.to} to={item.to} end={item.to === '/'} className={mobileLinkClass}>
+                  {item.label}
+                </NavLink>
+              ))}
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="mt-2 flex items-center gap-2 rounded-2xl px-4 py-3 text-left text-base font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  <FiLogOut aria-hidden="true" /> Logout
+                </button>
+              ) : (
+                <NavLink to="/login" className={mobileLinkClass}>
+                  Login
+                </NavLink>
+              )}
+            </div>
+          </motion.nav>
+        ) : null}
+      </AnimatePresence>
     </header>
   );
 }

@@ -1,13 +1,16 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 const USER_STORAGE_KEY = 'himi.user';
 const UserContext = createContext(null);
 
-function readStoredUser() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+const EMPTY_PROFILE = {
+  college: '',
+  branch: '',
+  semester: '',
+  learningGoal: ''
+};
 
+function readStoredUser() {
   const storedValue = window.localStorage.getItem(USER_STORAGE_KEY);
 
   if (!storedValue) {
@@ -22,65 +25,52 @@ function readStoredUser() {
   }
 }
 
-export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+function persistUser(user) {
+  window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+}
 
-  useEffect(() => {
-    setUser(readStoredUser());
-    setLoading(false);
+export function UserProvider({ children }) {
+  // localStorage is synchronous, so the session is restored during the first render
+  // (no flash of the logged-out UI). `loading` stays in the API for future async auth.
+  const [user, setUser] = useState(readStoredUser);
+
+  /**
+   * Persist a normalized user profile to local storage.
+   *
+   * @param {{name: string, email: string}} payload
+   */
+  const login = useCallback((payload) => {
+    const nextUser = {
+      ...EMPTY_PROFILE,
+      name: payload.name.trim(),
+      email: payload.email.trim()
+    };
+
+    setUser(nextUser);
+    persistUser(nextUser);
   }, []);
 
-  const value = useMemo(() => {
-    /**
-     * Persist a normalized user profile to local storage.
-     *
-     * @param {{name: string, email: string}} payload
-     */
-    function login(payload) {
-      const nextUser = {
-        name: payload.name.trim(),
-        email: payload.email.trim(),
-        college: '',
-        branch: '',
-        semester: '',
-        learningGoal: ''
-      };
+  const logout = useCallback(() => {
+    setUser(null);
+    window.localStorage.removeItem(USER_STORAGE_KEY);
+  }, []);
 
-      setUser(nextUser);
-      window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
-    }
+  /**
+   * Merge profile changes into the persisted user state.
+   *
+   * @param {Record<string, string>} updates
+   */
+  const updateProfile = useCallback((updates) => {
+    const nextUser = { ...EMPTY_PROFILE, ...(readStoredUser() ?? {}), ...updates };
 
-    function logout() {
-      setUser(null);
-      window.localStorage.removeItem(USER_STORAGE_KEY);
-    }
+    setUser(nextUser);
+    persistUser(nextUser);
+  }, []);
 
-    /**
-     * Merge profile changes into the persisted user state.
-     *
-     * @param {Record<string, string>} updates
-     */
-    function updateProfile(updates) {
-      setUser((currentUser) => {
-        const nextUser = {
-          ...(currentUser ?? readStoredUser() ?? {}),
-          ...updates
-        };
-
-        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
-        return nextUser;
-      });
-    }
-
-    return {
-      user,
-      loading,
-      login,
-      logout,
-      updateProfile
-    };
-  }, [loading, user]);
+  const value = useMemo(
+    () => ({ user, loading: false, login, logout, updateProfile }),
+    [login, logout, updateProfile, user]
+  );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
@@ -93,8 +83,4 @@ export function useUser() {
   }
 
   return context;
-}
-
-export function useAuth() {
-  return useUser();
 }

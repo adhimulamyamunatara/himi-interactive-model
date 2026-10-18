@@ -1,107 +1,190 @@
-import { useState } from 'react';
-import { FiEdit3, FiMail, FiSave, FiUser } from 'react-icons/fi';
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { FiBookOpen, FiMail, FiRotateCcw, FiSave, FiTarget, FiUser } from 'react-icons/fi';
+import { LuGraduationCap, LuSchool } from 'react-icons/lu';
 import Avatar from '../components/common/Avatar';
+import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Input from '../components/common/Input';
+import ProgressRing from '../components/common/ProgressRing';
 import Select from '../components/common/Select';
-import Textarea from '../components/common/Textarea';
+import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+const FIELDS = ['name', 'email', 'college', 'branch', 'semester', 'learningGoal'];
+
+function toForm(user) {
+  return Object.fromEntries(FIELDS.map((field) => [field, user?.[field] ?? '']));
+}
+
+function SummaryRow({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+      <Icon className="shrink-0 text-blue-600" aria-hidden="true" />
+      <div className="min-w-0">
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className="truncate text-sm font-semibold text-slate-900">{value || 'Not set yet'}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const { user, updateProfile } = useUser();
-  const [name, setName] = useState(user?.name || 'Bhargav');
-  const [email, setEmail] = useState(user?.email || 'student@himi.ai');
-  const [college, setCollege] = useState(user?.college || '');
-  const [branch, setBranch] = useState(user?.branch || '');
-  const [semester, setSemester] = useState(user?.semester || '');
-  const [learningGoal, setLearningGoal] = useState(user?.learningGoal || '');
+  const toast = useToast();
+  const [form, setForm] = useState(() => toForm(user));
+  const [errors, setErrors] = useState({});
 
-  const handleSave = (event) => {
+  const isDirty = useMemo(() => FIELDS.some((field) => form[field] !== (user?.[field] ?? '')), [form, user]);
+  const completeness = useMemo(() => {
+    const filled = FIELDS.filter((field) => String(user?.[field] ?? '').trim()).length;
+    return (filled / FIELDS.length) * 100;
+  }, [user]);
+
+  const handleChange = (field) => (event) => {
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-    updateProfile({ name, email, college, branch, semester, learningGoal });
+    const nextErrors = {};
+
+    if (form.name.trim().length < 2) {
+      nextErrors.name = 'Name must be at least 2 characters.';
+    }
+
+    if (!EMAIL_PATTERN.test(form.email.trim())) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error('Please fix the highlighted fields', 'Your profile was not saved.');
+      return;
+    }
+
+    const trimmed = Object.fromEntries(FIELDS.map((field) => [field, form[field].trim()]));
+    updateProfile(trimmed);
+    setForm(trimmed);
+    toast.success('Profile saved', 'Your changes are stored on this device.');
+  };
+
+  const handleReset = () => {
+    setForm(toForm(user));
+    setErrors({});
   };
 
   return (
-    <section className="section-shell py-10 lg:py-14">
-      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <motion.section
+      className="section-shell py-10 lg:py-14"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="mb-8">
+        <p className="eyebrow">Profile</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Your learning profile</h1>
+        <p className="mt-2 text-sm text-slate-600">HIMI uses these details to personalise how it greets and teaches you.</p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Card className="flex flex-col items-center text-center">
-          <Avatar name={name} size="xl" />
-          <h1 className="mt-6 text-3xl font-bold text-slate-950">{name}</h1>
-          <p className="mt-2 text-sm text-slate-500">Editable profile shell</p>
-          <div className="mt-8 w-full space-y-3 text-left text-sm text-slate-600">
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">Student account</div>
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">Local storage only</div>
-            <div className="rounded-2xl bg-slate-50 px-4 py-3">No backend persistence</div>
+          <Avatar name={user?.name} size="xl" />
+          <h2 className="mt-5 text-2xl font-bold text-slate-950">{user?.name}</h2>
+          <p className="mt-1 max-w-full truncate text-sm text-slate-600">{user?.email}</p>
+          <Badge tone="blue" className="mt-4">
+            Student account
+          </Badge>
+
+          <div className="mt-8">
+            <ProgressRing value={completeness} size={120} strokeWidth={10} label="Profile completeness" caption="complete" />
+          </div>
+
+          <div className="mt-8 w-full space-y-3 text-left">
+            <SummaryRow icon={LuSchool} label="College" value={user?.college} />
+            <SummaryRow icon={LuGraduationCap} label="Branch" value={user?.branch} />
+            <SummaryRow icon={FiBookOpen} label="Semester" value={user?.semester ? `Semester ${user.semester}` : ''} />
+            <SummaryRow icon={FiTarget} label="Learning goal" value={user?.learningGoal} />
           </div>
         </Card>
 
         <Card>
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-blue-50 p-3 text-xl text-blue-600">
-              <FiEdit3 />
-            </div>
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">Profile</p>
-              <h2 className="text-2xl font-bold text-slate-950">Editable student details</h2>
-            </div>
-          </div>
+          <h2 className="text-2xl font-bold text-slate-950">Edit details</h2>
+          <p className="mt-1 text-sm text-slate-600">Changes are saved to your browser only.</p>
 
-          <form className="mt-8 space-y-5" onSubmit={handleSave}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="grid gap-5 md:grid-cols-2">
-              <Input label="Name" value={name} onChange={(event) => setName(event.target.value)} icon={FiUser} />
+              <Input
+                label="Name"
+                value={form.name}
+                onChange={handleChange('name')}
+                icon={FiUser}
+                autoComplete="name"
+                error={errors.name}
+              />
               <Input
                 label="Email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                icon={FiMail}
                 type="email"
+                value={form.email}
+                onChange={handleChange('email')}
+                icon={FiMail}
+                autoComplete="email"
+                error={errors.email}
               />
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <Input label="College" value={college} onChange={(event) => setCollege(event.target.value)} />
-              <Input label="Branch" value={branch} onChange={(event) => setBranch(event.target.value)} />
+              <Input
+                label="College"
+                value={form.college}
+                onChange={handleChange('college')}
+                icon={LuSchool}
+                placeholder="e.g. JNTU Hyderabad"
+              />
+              <Input
+                label="Branch"
+                value={form.branch}
+                onChange={handleChange('branch')}
+                icon={LuGraduationCap}
+                placeholder="e.g. Computer Science"
+              />
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <Select label="Semester" value={semester} onChange={(event) => setSemester(event.target.value)}>
+              <Select label="Semester" value={form.semester} onChange={handleChange('semester')}>
                 <option value="">Select semester</option>
-                {['1', '2', '3', '4', '5', '6', '7', '8'].map((item) => (
-                  <option key={item} value={item}>
-                    Semester {item}
+                {SEMESTERS.map((semester) => (
+                  <option key={semester} value={semester}>
+                    Semester {semester}
                   </option>
                 ))}
               </Select>
               <Input
-                label="Learning Goal"
-                value={learningGoal}
-                onChange={(event) => setLearningGoal(event.target.value)}
+                label="Learning goal"
+                value={form.learningGoal}
+                onChange={handleChange('learningGoal')}
+                icon={FiTarget}
+                placeholder="e.g. Crack campus placements"
               />
             </div>
 
-            <Textarea
-              label="Bio"
-              rows={5}
-              value={`Focused on ${learningGoal || 'structured learning'} with HIMI.`}
-              readOnly
-            />
-
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit">
-                <FiSave /> Save Profile
+            <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-6">
+              <Button type="submit" disabled={!isDirty}>
+                <FiSave aria-hidden="true" /> Save profile
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => updateProfile({ name, email, college, branch, semester, learningGoal })}
-              >
-                Save Locally
+              <Button variant="secondary" onClick={handleReset} disabled={!isDirty}>
+                <FiRotateCcw aria-hidden="true" /> Discard changes
               </Button>
+              {isDirty ? <span className="text-sm text-amber-700">You have unsaved changes.</span> : null}
             </div>
           </form>
         </Card>
       </div>
-    </section>
+    </motion.section>
   );
 }

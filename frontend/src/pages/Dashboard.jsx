@@ -1,164 +1,275 @@
-import { FiBook, FiMessageCircle, FiPlus, FiPlay, FiZap } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { FiAward, FiBookOpen, FiEdit3, FiMessageCircle, FiShuffle, FiTarget, FiZap } from 'react-icons/fi';
+import { LuFlame } from 'react-icons/lu';
+import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
+import EmptyState from '../components/common/EmptyState';
+import ProgressRing from '../components/common/ProgressRing';
 import ChatPreview from '../components/dashboard/ChatPreview';
 import QuickAction from '../components/dashboard/QuickAction';
 import StatCard from '../components/dashboard/StatCard';
 import { useChat } from '../context/ChatContext';
 import { useUser } from '../context/UserContext';
-import { formatGreeting } from '../utils/formatters';
-import { DEFAULT_SUBJECT } from '../utils/subjects';
+import { formatGreeting, formatLongDate, formatRelativeTime, getDailyQuote } from '../utils/formatters';
+import { calculateStreak, getRecentQuestions, getSubjectActivity } from '../utils/messageModel';
+import { SUBJECTS } from '../utils/subjects';
+
+const UPCOMING = [
+  'Voice conversations',
+  'Long-term memory and personalised learning',
+  'Quiz generator and study planner',
+  'Avatar-based mentor'
+];
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
+};
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useUser();
-  const { messages, selectedSubject } = useChat();
-  const greeting = formatGreeting(user?.name || 'Student');
-  const todayDate = new Date().toLocaleDateString(undefined, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  const userMessageCount = messages.filter((message) => message.role === 'user').length;
-  const recentConversationCount = messages.slice(-4).length;
+  const { messages, selectedSubject, setSelectedSubject } = useChat();
+
+  const quote = useMemo(() => getDailyQuote(), []);
+  const stats = useMemo(() => {
+    const activity = getSubjectActivity(messages);
+    const questions = getRecentQuestions(messages, 3);
+
+    return {
+      activity,
+      recentQuestions: questions,
+      totalQuestions: messages.filter((message) => message.role === 'user').length,
+      streak: calculateStreak(messages),
+      progress: (activity.length / SUBJECTS.length) * 100
+    };
+  }, [messages]);
+
+  const hasActivity = messages.length > 0;
+
+  const openSubject = (subject) => {
+    setSelectedSubject(subject);
+    navigate('/chat');
+  };
+
+  const surpriseMe = () => {
+    const unexplored = SUBJECTS.filter((subject) => !stats.activity.some((entry) => entry.subject === subject));
+    const pool = unexplored.length > 0 ? unexplored : SUBJECTS;
+    openSubject(pool[Math.floor(Math.random() * pool.length)]);
+  };
 
   return (
-    <section className="section-shell py-10 lg:py-14">
+    <motion.section
+      className="section-shell py-10 lg:py-14"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
       <div className="grid gap-6">
-        <Card className="bg-gradient-to-r from-slate-950 to-slate-800 text-white">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">Welcome</p>
-              <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{greeting}</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-                Your dashboard summarizes today's learning context and lets you jump back into the chat
-                workspace immediately.
-              </p>
+        {/* Welcome ------------------------------------------------------------------ */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-0 bg-slate-950 p-8 text-white sm:p-10">
+            <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-violet-600/40 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-cyan-500/30 blur-3xl" />
+            <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold text-cyan-300">{formatLongDate()}</p>
+                <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+                  {formatGreeting(user?.name?.split(' ')[0] || 'Student')}
+                </h1>
+                <p className="mt-4 text-sm leading-7 text-slate-300">
+                  {hasActivity
+                    ? `You have asked ${stats.totalQuestions} question${stats.totalQuestions === 1 ? '' : 's'} so far. Pick up where you left off.`
+                    : 'Your learning journey starts with a single question. Choose a subject and ask HIMI anything.'}
+                </p>
+                <figure className="mt-6 border-l-2 border-cyan-400/70 pl-4">
+                  <blockquote className="text-sm italic leading-6 text-slate-200">“{quote.text}”</blockquote>
+                  <figcaption className="mt-1 text-xs text-slate-400">{quote.author}</figcaption>
+                </figure>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
+                <div className="flex items-center gap-2 text-sm text-slate-300">
+                  Current subject <SubjectBadge subject={selectedSubject} />
+                </div>
+                <Button to="/chat" size="lg" variant="light">
+                  <FiMessageCircle aria-hidden="true" /> Continue Learning
+                </Button>
+              </div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <p className="text-sm text-slate-300">Today's date</p>
-              <p className="mt-2 text-2xl font-bold">{todayDate}</p>
-              <p className="mt-3 text-sm text-slate-300">Keep learning from your last session.</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
+        {/* Stats -------------------------------------------------------------------- */}
+        <motion.div variants={item} className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="Selected subject"
-            value={selectedSubject || DEFAULT_SUBJECT}
-            caption="The active subject used throughout chat and quick actions."
+            icon={FiMessageCircle}
+            title="Total messages"
+            value={messages.length}
+            caption="Saved locally in this browser."
             accent="blue"
           />
           <StatCard
-            title="Total messages"
-            value={String(messages.length)}
-            caption="Conversation history saved locally in the browser."
+            icon={FiTarget}
+            title="Questions asked"
+            value={stats.totalQuestions}
+            caption="Every question builds understanding."
             accent="purple"
           />
           <StatCard
-            title="Recent conversation count"
-            value={String(recentConversationCount)}
-            caption="Recent turns available for quick continuation."
+            icon={LuFlame}
+            title="Learning streak"
+            value={`${stats.streak} day${stats.streak === 1 ? '' : 's'}`}
+            caption={stats.streak > 0 ? 'Ask a question daily to keep it alive.' : 'Ask a question today to start a streak.'}
+            accent="amber"
+          />
+          <StatCard
+            icon={FiBookOpen}
+            title="Subjects explored"
+            value={`${stats.activity.length}/${SUBJECTS.length}`}
+            caption="Across your engineering syllabus."
             accent="cyan"
           />
-        </div>
+        </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        {/* Progress + quick actions -------------------------------------------------- */}
+        <motion.div variants={item} className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <Card>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">Quick start</p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-950">Continue learning</h2>
+            <p className="eyebrow">Learning progress</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Syllabus coverage</h2>
+            <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
+              <ProgressRing value={stats.progress} label="Syllabus coverage" caption="explored" />
+              <div className="w-full space-y-3 text-sm text-slate-600">
+                <p>
+                  You have explored <strong className="text-slate-900">{stats.activity.length}</strong> of{' '}
+                  <strong className="text-slate-900">{SUBJECTS.length}</strong> subjects.
+                </p>
+                <p>
+                  {stats.activity.length === SUBJECTS.length
+                    ? 'Amazing: you have touched every subject. Time to go deeper.'
+                    : 'Try a new subject to widen your foundation.'}
+                </p>
+                <Badge tone="purple">
+                  <FiAward aria-hidden="true" /> Keep exploring
+                </Badge>
               </div>
-              <Link to="/chat">
-                <Button variant="secondary">Continue Learning</Button>
-              </Link>
-            </div>
-            <div className="mt-6 space-y-4">
-              <ChatPreview
-                title="Resume the latest conversation"
-                subtitle="Open chat to continue the last learning exchange immediately."
-                time="Now"
-              />
-              <ChatPreview
-                title="Switch to a different subject"
-                subtitle="Use the chat subject selector when you want a new context."
-                time="Later"
-              />
             </div>
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">Quick actions</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">Session shortcuts</h2>
-            <div className="mt-6 grid gap-3">
-              <QuickAction icon={<FiPlay />} label="Resume lesson" />
-              <QuickAction icon={<FiMessageCircle />} label="Open chat" />
-              <QuickAction icon={<FiBook />} label="Review notes" />
-              <QuickAction icon={<FiPlus />} label="Add subject" />
+            <p className="eyebrow">Quick actions</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Jump back in</h2>
+            <div className="mt-5 grid gap-3">
+              <QuickAction
+                icon={FiMessageCircle}
+                label="Resume learning"
+                description={`Continue with ${selectedSubject}`}
+                to="/chat"
+              />
+              <QuickAction
+                icon={FiShuffle}
+                label="Surprise me with a subject"
+                description="Start a fresh topic you have not tried yet"
+                onClick={surpriseMe}
+              />
+              <QuickAction icon={FiEdit3} label="Complete your profile" description="Add college, branch and goals" to="/profile" />
             </div>
           </Card>
-        </div>
+        </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+        {/* Recent activity ------------------------------------------------------------ */}
+        <motion.div variants={item} className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">Upcoming features</p>
-            <div className="mt-5 space-y-4">
-              {[
-                'Voice input and response flow',
-                'Personalized learning context',
-                'Study progress analytics',
-                'AI subject recommendations'
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                  <FiZap className="text-cyan-600" />
-                  <p className="text-sm font-medium text-slate-700">{item}</p>
+            <p className="eyebrow">Recent subjects</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Where you studied</h2>
+            <div className="mt-5">
+              {stats.activity.length === 0 ? (
+                <EmptyState
+                  compact
+                  icon={FiBookOpen}
+                  title="No subjects yet"
+                  description="Ask your first question and your subjects will appear here."
+                  actionLabel="Start learning"
+                  actionTo="/chat"
+                />
+              ) : (
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {stats.activity.slice(0, 4).map((entry) => (
+                    <li key={entry.subject}>
+                      <button
+                        type="button"
+                        onClick={() => openSubject(entry.subject)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-200 hover:bg-blue-50/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
+                      >
+                        <SubjectBadge subject={entry.subject} />
+                        <p className="mt-3 text-sm font-semibold text-slate-900">
+                          {entry.count} question{entry.count === 1 ? '' : 's'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">Last active {formatRelativeTime(entry.lastActive)}</p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <p className="eyebrow">Recent conversations</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Latest questions</h2>
+            <div className="mt-5">
+              {stats.recentQuestions.length === 0 ? (
+                <EmptyState
+                  compact
+                  icon={FiMessageCircle}
+                  title="No conversations yet"
+                  description="Your most recent questions will be listed here for quick access."
+                  actionLabel="Ask a question"
+                  actionTo="/chat"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {stats.recentQuestions.map((message) => (
+                    <ChatPreview
+                      key={message.id}
+                      title={message.content}
+                      subject={message.subject}
+                      time={formatRelativeTime(message.timestamp)}
+                    />
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </Card>
+        </motion.div>
 
-          <Card className="flex flex-col justify-between gap-6 bg-gradient-to-br from-blue-600 to-cyan-500 text-white">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-100">Dashboard CTA</p>
-              <h2 className="mt-2 text-3xl font-bold">Open the chat workspace</h2>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-blue-50/90">
-                The chat layout is functional now and keeps history locally across refreshes.
-              </p>
+        {/* Coming next ----------------------------------------------------------------- */}
+        <motion.div variants={item}>
+          <Card>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="eyebrow">Coming next</p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950">The roadmap ahead</h2>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
+                {UPCOMING.map((feature) => (
+                  <li key={feature} className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                    <FiZap className="shrink-0 text-cyan-600" aria-hidden="true" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <Link to="/chat">
-              <Button className="bg-white text-slate-900 hover:bg-slate-100">Go to chat</Button>
-            </Link>
           </Card>
-        </div>
-
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-600">Recent conversation count</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">Recent learning sessions</h2>
-            </div>
-            <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-              {userMessageCount} user messages
-            </span>
-          </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {messages.slice(-3).map((message) => (
-              <ChatPreview
-                key={message.id}
-                title={message.subject}
-                subtitle={message.content}
-                time={new Date(message.timestamp).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              />
-            ))}
-          </div>
-        </Card>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
