@@ -249,7 +249,7 @@ export default function Landing() {
       </section>
 
       {/* How it works ---------------------------------------------------------------- */}
-      <section className="bg-slate-950 py-20 text-white" id="how-it-works">
+      <section className="force-light bg-slate-950 py-20 text-white" id="how-it-works">
         <div className="section-shell">
           <Reveal className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">How it works</p>
@@ -372,7 +372,7 @@ export default function Landing() {
       {/* Call to action --------------------------------------------------------------- */}
       <section className="section-shell py-20">
         <Reveal>
-          <div className="relative overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-16 text-center text-white sm:px-12">
+          <div className="relative overflow-hidden force-light rounded-[2rem] bg-slate-950 px-6 py-16 text-center text-white sm:px-12">
             <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-blue-600/40 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -right-10 h-72 w-72 rounded-full bg-violet-600/40 blur-3xl" />
             <div className="relative mx-auto max-w-2xl">

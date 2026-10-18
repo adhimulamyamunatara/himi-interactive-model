@@ -18,6 +18,14 @@ It is written from what was actually built and tested, not from the original pla
 | Campus assistant | Operational (needs your documents) | Answers only from documents the student adds; every answer needs a quote that the server confirms appears in the document; otherwise a fixed "not found" message | HIMI ships no college data. It cannot tell if a document is out of date |
 | Virtual classroom | Partial (solo only) | A local study room: agenda, notes, tutor Q&A, whiteboard and diagram links, summary and revision questions | **Not multi-user.** No other participants, no video or audio, nothing is shared between devices |
 
+## Light and dark themes
+
+- Three choices: **Light**, **Dark** and **Match my device** (the default). The header button flips between light and dark; Profile → Appearance has all three. The choice is saved in this browser only.
+- The theme is set on `<html data-theme>` by a small script in `index.html` before first paint, so there is no flash, and by `useTheme` afterwards. "Match my device" follows the device live.
+- Implementation: the colour tokens in `src/styles/tokens.js` have a dark set that re-points the same CSS variables, so components did not need `dark:` classes. Solid fills such as buttons and gradients keep their colours in both themes, so white button text stays readable. `.force-light` keeps an area light inside the dark theme: the dark bands on the landing page, code blocks and diagram paper. The whiteboard canvas is white paper in both themes on purpose.
+- The logo has navy letters, so in the dark theme it sits on a soft white plate.
+- Checked automatically: every page was loaded in both themes at desktop width and scanned for text below a 3:1 contrast ratio and for horizontal overflow, and the token contrast ratios are unit tested. Not checked: a person's eye on every state (empty, error, loading) of every page, print styles, and forced-colors (high-contrast) mode.
+
 ## What a real shared classroom needs (not built)
 
 - A real-time server (WebSocket or a managed service such as LiveKit or Daily) for presence, chat and shared notes.

@@ -58,7 +58,7 @@ export default function ScoreTrendChart({ points }) {
 
         {points.map((point, index) => (
           <g key={point.id}>
-            <circle cx={x(index, points.length)} cy={y(point.percentage)} r="5" fill={chartColors.line} stroke="#fff" strokeWidth="2" />
+            <circle cx={x(index, points.length)} cy={y(point.percentage)} r="5" fill={chartColors.line} stroke={chartColors.surface} strokeWidth="2" />
             {points.length <= 8 || index === points.length - 1 ? (
               <text x={x(index, points.length)} y={y(point.percentage) - 10} textAnchor="middle" fontSize="11" fontWeight="600" fill={chartColors.label}>
                 {round(point.percentage)}%

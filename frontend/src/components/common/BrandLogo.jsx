@@ -25,7 +25,8 @@ export default function BrandLogo({ variant = 'horizontal', className = 'h-10', 
       alt={alt}
       draggable="false"
       decoding="async"
-      className={`w-auto select-none object-contain ${className}`}
+      // The artwork has navy letters, so on the dark theme it sits on a soft white plate to stay readable.
+      className={`w-auto select-none object-contain dark:rounded-2xl dark:bg-white/95 dark:p-1 ${className}`}
       {...props}
     />
   );

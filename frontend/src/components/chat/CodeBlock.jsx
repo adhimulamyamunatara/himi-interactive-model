@@ -6,7 +6,7 @@ export default function CodeBlock({ code, language }) {
   const { copied, copy } = useCopyToClipboard();
 
   return (
-    <div className="group my-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-card">
+    <div className="force-light group my-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-card">
       <div className="flex items-center justify-between border-b border-white/10 bg-slate-900 px-4 py-2">
         <span className="font-mono text-xs uppercase tracking-wider text-slate-400">{language ?? 'code'}</span>
         <button

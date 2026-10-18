@@ -18,6 +18,9 @@ export const LANGUAGES = [
 
 export const HELP_MODES = ['hint', 'guided', 'full'];
 
+/** 'system' follows the device's light/dark setting. */
+export const THEMES = ['system', 'light', 'dark'];
+
 export const DEFAULT_PREFERENCES = Object.freeze({
   uiLanguage: 'en',
   explanationLanguage: 'en',
@@ -27,11 +30,14 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   autoReadReplies: false,
   // Camera: allows the live camera to be requested at all. It never starts by itself, and choosing a photo from
   // the device's files does not depend on it.
-  cameraEnabled: true
+  cameraEnabled: true,
+  // Appearance: follows the device unless the student picks light or dark.
+  theme: 'system'
 });
 
 export const isLanguageCode = (value) => LANGUAGES.some((language) => language.code === value);
 export const isHelpMode = (value) => HELP_MODES.includes(value);
+export const isTheme = (value) => THEMES.includes(value);
 
 /** Turn anything into a complete, valid preferences object. Unknown or invalid fields fall back to defaults. */
 export function normalizePreferences(raw) {
@@ -43,7 +49,8 @@ export function normalizePreferences(raw) {
     helpMode: isHelpMode(source.helpMode) ? source.helpMode : DEFAULT_PREFERENCES.helpMode,
     voiceEnabled: typeof source.voiceEnabled === 'boolean' ? source.voiceEnabled : DEFAULT_PREFERENCES.voiceEnabled,
     autoReadReplies: typeof source.autoReadReplies === 'boolean' ? source.autoReadReplies : DEFAULT_PREFERENCES.autoReadReplies,
-    cameraEnabled: typeof source.cameraEnabled === 'boolean' ? source.cameraEnabled : DEFAULT_PREFERENCES.cameraEnabled
+    cameraEnabled: typeof source.cameraEnabled === 'boolean' ? source.cameraEnabled : DEFAULT_PREFERENCES.cameraEnabled,
+    theme: isTheme(source.theme) ? source.theme : DEFAULT_PREFERENCES.theme
   };
 }
 

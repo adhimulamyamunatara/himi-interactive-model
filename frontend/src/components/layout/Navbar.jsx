@@ -12,6 +12,7 @@ import { MEMBER_PAGES, PUBLIC_PAGES, pageLabel } from '../../utils/navigation';
 import BrandLogo from '../common/BrandLogo';
 import Button from '../common/Button';
 import LanguageSelect from '../common/LanguageSelect';
+import ThemeToggle from '../theme/ThemeToggle';
 
 const PRIMARY_LINKS = MEMBER_PAGES.filter((page) => page.primary);
 const MORE_LINKS = MEMBER_PAGES.filter((page) => !page.primary);
@@ -109,7 +110,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl dark:border-slate-200/70">
       <div className="section-shell flex items-center justify-between gap-4 py-4">
         <Link to="/" className="flex shrink-0 items-center rounded-xl" aria-label="HIMI home">
           <BrandLogo variant="horizontal" className="h-11 sm:h-12" alt="" />
@@ -126,6 +127,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <LanguageSelect className="hidden sm:inline-flex" />
+          <ThemeToggle />
           {user ? (
             <>
               <Link
@@ -138,8 +140,9 @@ export default function Navbar() {
                   <p className="text-xs text-slate-500">{t('common.student')}</p>
                 </div>
               </Link>
-              <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={handleLogout}>
-                <FiLogOut aria-hidden="true" /> {t('nav.logout')}
+              {/* Icon-only below 2xl so the header, which now also holds the theme toggle, fits at 1280px. */}
+              <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={handleLogout} aria-label={t('nav.logout')} title={t('nav.logout')}>
+                <FiLogOut aria-hidden="true" /> <span className="hidden 2xl:inline">{t('nav.logout')}</span>
               </Button>
             </>
           ) : (

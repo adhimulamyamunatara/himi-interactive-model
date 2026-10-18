@@ -5,6 +5,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageSkeleton } from './components/common/Skeleton';
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
+import { useTheme } from './hooks/useTheme';
 import PageTransition from './components/layout/PageTransition';
 import { useUser } from './context/UserContext';
 
@@ -40,6 +41,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   const location = useLocation();
+  useTheme({ apply: true });
   const isChatRoute = location.pathname === '/chat';
 
   useEffect(() => {

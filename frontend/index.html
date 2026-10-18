@@ -3,7 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b2955" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Apply the saved theme before first paint so there is no flash. Keep in step with src/utils/theme.js.
+      (function () {
+        try {
+          var choice = 'system';
+          var raw = localStorage.getItem('himi_preferences_v1');
+          var saved = raw && JSON.parse(raw);
+          if (saved && saved.preferences && /^(light|dark|system)$/.test(saved.preferences.theme)) {
+            choice = saved.preferences.theme;
+          }
+          var dark = choice === 'dark' || (choice === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.setAttribute('data-theme', dark ? 'dark' : 'light');
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0a1424' : '#ffffff');
+        } catch (error) {
+          /* storage blocked: stay on the light theme */
+        }
+      })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />

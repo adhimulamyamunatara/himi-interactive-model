@@ -87,7 +87,7 @@ function DiagramResult({ diagram }) {
       <Card className="p-5 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900">{diagram.title}</h2>
         <figure className="mt-4" aria-label={t('diagrams.figureLabel', { title: diagram.title })}>
-          <div className="scrollbar-thin overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2">
+          <div className="scrollbar-thin force-light overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2">
             <DiagramView layout={layout} title={diagram.title} description={diagram.explanation} />
           </div>
         </figure>

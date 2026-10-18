@@ -29,7 +29,7 @@ function Findings({ findings, code }) {
                 <span className="min-w-0 break-words">{finding.title}</span>
               </p>
               {source ? (
-                <pre className="mt-2 overflow-x-auto rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-100">
+                <pre className="mt-2 overflow-x-auto force-light rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-100">
                   <code translate="no">{source}</code>
                 </pre>
               ) : null}
@@ -83,7 +83,7 @@ function ImprovedCode({ code }) {
           {copied ? <FiCheck aria-hidden="true" /> : <FiCopy aria-hidden="true" />} {copied ? t('common.copied') : t('code.result.copyCode')}
         </button>
       </div>
-      <pre className="mt-3 max-h-96 overflow-auto rounded-xl bg-slate-900 p-4 text-xs leading-5 text-slate-100">
+      <pre className="mt-3 max-h-96 overflow-auto force-light rounded-xl bg-slate-900 p-4 text-xs leading-5 text-slate-100">
         <code translate="no">{code}</code>
       </pre>
     </Card>

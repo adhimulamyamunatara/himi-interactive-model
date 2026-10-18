@@ -90,7 +90,7 @@ export default function Dashboard() {
       <div className="grid gap-6">
         {/* Welcome ------------------------------------------------------------------ */}
         <motion.div variants={item}>
-          <Card className="relative overflow-hidden border-0 bg-slate-950 p-8 text-white sm:p-10">
+          <Card className="relative overflow-hidden force-light border-0 bg-slate-950 p-8 text-white sm:p-10">
             <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-violet-600/40 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-cyan-500/30 blur-3xl" />
             <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">

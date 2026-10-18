@@ -9,6 +9,7 @@ import Card from '../components/common/Card';
 import Input from '../components/common/Input';
 import ProgressRing from '../components/common/ProgressRing';
 import Select from '../components/common/Select';
+import AppearanceSettings from '../components/settings/AppearanceSettings';
 import VoiceLanguageSettings from '../components/settings/VoiceLanguageSettings';
 import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
@@ -185,6 +186,10 @@ export default function Profile() {
             </div>
           </form>
         </Card>
+
+        <div className="lg:col-span-2">
+          <AppearanceSettings />
+        </div>
 
         <div className="lg:col-span-2">
           <VoiceLanguageSettings />

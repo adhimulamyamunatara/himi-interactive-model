@@ -146,7 +146,7 @@ function ProfileForm({ saved, onSave, onReset, onDelete }) {
           This is the data attached to your chat, quiz and study-planner requests while personalisation is on. The AI treats it as
           information about you, not as instructions.
         </p>
-        <pre className="mt-3 max-h-64 overflow-auto rounded-xl bg-slate-900 p-3 text-xs text-slate-100" tabIndex={0} aria-label="Learning memory data sent with AI requests">
+        <pre className="mt-3 max-h-64 overflow-auto force-light rounded-xl bg-slate-900 p-3 text-xs text-slate-100" tabIndex={0} aria-label="Learning memory data sent with AI requests">
           {payload}
         </pre>
       </details>

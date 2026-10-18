@@ -127,7 +127,7 @@ export default function Code() {
               disabled={loading}
               aria-invalid={showError ? 'true' : undefined}
               aria-describedby="code-counter code-validation"
-              className="scrollbar-thin w-full resize-y overflow-auto whitespace-pre rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 font-mono text-xs leading-5 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
+              className="scrollbar-thin w-full resize-y overflow-auto whitespace-pre force-light rounded-2xl border border-slate-200 bg-slate-950 px-4 py-3 font-mono text-xs leading-5 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 disabled:opacity-60"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
               <span id="code-counter">{t('code.counter', { lines: countLines(code), chars: code.length, max: MAX_CODE_CHARS })}</span>

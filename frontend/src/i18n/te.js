@@ -447,5 +447,14 @@ export default {
   'classroom.end.title': 'ఈ సెషన్‌ను ముగించాలా?',
   'classroom.end.text': 'ఈ రూమ్ అజెండా, నోట్స్, ప్రశ్నలు, సారాంశం ఈ బ్రౌజర్ నుండి తొలగించబడతాయి.',
   'classroom.end.confirm': 'ముగించి తొలగించండి',
-  'classroom.storageFailed': 'ఈ రూమ్‌ను ఈ బ్రౌజర్‌లో సేవ్ చేయలేకపోయాము (స్టోరేజ్ నిండి ఉండవచ్చు లేదా నిరోధించబడి ఉండవచ్చు). ఈ పేజీ వదిలితే అది పోతుంది.'
+  'classroom.storageFailed': 'ఈ రూమ్‌ను ఈ బ్రౌజర్‌లో సేవ్ చేయలేకపోయాము (స్టోరేజ్ నిండి ఉండవచ్చు లేదా నిరోధించబడి ఉండవచ్చు). ఈ పేజీ వదిలితే అది పోతుంది.',
+  'theme.light': 'లైట్',
+  'theme.dark': 'డార్క్',
+  'theme.system': 'నా పరికరం ప్రకారం',
+  'theme.switchToDark': 'డార్క్ థీమ్‌కు మార్చండి',
+  'theme.switchToLight': 'లైట్ థీమ్‌కు మార్చండి',
+  'settings.appearance.title': 'రూపం',
+  'settings.appearance.subtitle': 'HIMI ఎలా కనిపించాలో ఎంచుకోండి. ఇది ఈ పరికరంలో మాత్రమే సేవ్ అవుతుంది.',
+  'settings.appearance.theme': 'థీమ్',
+  'settings.appearance.current': 'ప్రస్తుతం {theme} థీమ్ చూపబడుతోంది.'
 };

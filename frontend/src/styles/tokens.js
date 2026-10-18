@@ -98,6 +98,32 @@ export const palette = {
     900: '#0e4f44',
     950: '#062e28'
   },
+  amber: {
+    50: '#fffbeb',
+    100: '#fef3c7',
+    200: '#fde68a',
+    300: '#fcd34d',
+    400: '#fbbf24',
+    500: '#f59e0b',
+    600: '#d97706',
+    700: '#b45309',
+    800: '#92400e',
+    900: '#78350f',
+    950: '#451a03'
+  },
+  rose: {
+    50: '#fff1f2',
+    100: '#ffe4e6',
+    200: '#fecdd3',
+    300: '#fda4af',
+    400: '#fb7185',
+    500: '#f43f5e',
+    600: '#e11d48',
+    700: '#be123c',
+    800: '#9f1239',
+    900: '#881337',
+    950: '#4c0519'
+  },
   teal: {
     50: '#effcfb',
     100: '#d3f7f4',
@@ -136,6 +162,73 @@ export const semantic = {
   info: palette.blue[600]
 };
 
+
+/* ------------------------------------------------------------------------------------------------ dark theme
+ * The dark theme keeps every class name and re-points the same CSS variables, so components need no `dark:` variants.
+ *
+ * - `slate` (ink, borders, surfaces) gets a hand-tuned navy scale that runs the other way round: 900 is near white.
+ * - Every other family is mirrored: its pale tints (50-300) become deep tints and its dark text shades (600-900)
+ *   become light, so "dark text on a pale chip" turns into "light text on a deep chip" automatically.
+ * - Solid fills (`bg-blue-600` and darker, gradients, buttons) always use the light-theme values through the
+ *   `--himi-solid-*` variables, so white button text keeps its contrast in both themes.
+ * - `.force-light` restores the light values inside a subtree (the dark bands on the landing page, code blocks and
+ *   diagram paper), so those keep their own colours in either theme.
+ */
+export const darkSlate = {
+  50: '#15233d',
+  100: '#1c2c4a',
+  200: '#2a3d62',
+  300: '#3b5180',
+  400: '#7487a8',
+  500: '#92a3c0',
+  600: '#aebbd2',
+  700: '#c8d2e3',
+  800: '#dfe6f1',
+  900: '#f0f4fa',
+  950: '#fafcff'
+};
+
+/** Which light shade supplies each dark shade of a mirrored family. */
+export const DARK_SHADE_SOURCE = { 50: 950, 100: 900, 200: 800, 300: 700, 400: 500, 500: 400, 600: 400, 700: 300, 800: 200, 900: 100, 950: 50 };
+
+export const darkPalette = Object.fromEntries(
+  Object.entries(palette).map(([family, scale]) => [
+    family,
+    family === 'slate'
+      ? darkSlate
+      : Object.fromEntries(Object.entries(DARK_SHADE_SOURCE).map(([shade, source]) => [shade, scale[source]]))
+  ])
+);
+
+export const darkSemantic = {
+  canvas: '#0a1424',
+  surface: '#0f1b30',
+  'surface-muted': darkSlate[50],
+  ink: darkSlate[900],
+  'ink-muted': darkSlate[600],
+  'ink-subtle': darkSlate[500],
+  line: darkSlate[200],
+  primary: palette.blue[400],
+  secondary: palette.violet[400],
+  accent: palette.cyan[400],
+  'accent-green': palette.emerald[400],
+  focus: palette.blue[300],
+  success: '#34d399',
+  warning: '#fbbf24',
+  danger: '#fb7185',
+  info: palette.blue[400]
+};
+
+export const darkShadows = {
+  soft: '0 24px 60px rgba(0, 0, 0, 0.55)',
+  card: '0 10px 30px rgba(0, 0, 0, 0.4)',
+  glow: '0 12px 40px rgba(63, 78, 224, 0.4)',
+  'glow-soft': '0 8px 24px rgba(63, 78, 224, 0.3)'
+};
+
+/** Shades from this one up are solid fills and keep their light-theme value in every theme. */
+export const SOLID_FROM = 400;
+
 export const gradients = {
   /** Robot body: sky blue through indigo to violet. Used for primary actions and AI surfaces. */
   brand: `linear-gradient(135deg, ${palette.blue[600]} 0%, ${palette.indigo[600]} 52%, ${palette.violet[500]} 100%)`,
@@ -169,16 +262,20 @@ export const motion = {
   ease: 'cubic-bezier(0.22, 1, 0.36, 1)'
 };
 
-/** Plain colours for SVG/canvas drawing code that cannot use class names. */
+/**
+ * Colours for SVG drawing code. They are CSS variable references, so they follow the theme; SVG attributes accept
+ * `var()`, but canvas code cannot use them (the whiteboard and diagram "paper" stay light on purpose).
+ */
 export const chartColors = {
-  line: palette.blue[600],
-  grid: palette.slate[200],
-  axis: palette.slate[600],
-  label: palette.slate[800],
-  threshold: '#d97706',
-  thresholdLabel: '#92400e',
-  ringTrack: palette.slate[200],
-  ringStops: [palette.blue[600], palette.violet[500], palette.cyan[500]]
+  line: 'rgb(var(--himi-blue-600))',
+  grid: 'rgb(var(--himi-slate-200))',
+  axis: 'rgb(var(--himi-slate-600))',
+  label: 'rgb(var(--himi-slate-800))',
+  threshold: 'rgb(var(--himi-amber-600))',
+  thresholdLabel: 'rgb(var(--himi-amber-800))',
+  ringTrack: 'rgb(var(--himi-slate-200))',
+  ringStops: [palette.blue[600], palette.violet[500], palette.cyan[500]],
+  surface: 'rgb(var(--himi-surface))'
 };
 
 /** Parse "#rrggbb" into "r g b" (the channel form Tailwind's `<alpha-value>` placeholder needs). */
@@ -210,34 +307,54 @@ export function contrastRatio(foreground, background) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-/** Every token as a `--himi-*` CSS custom property. Colours use the space-separated channel form. */
-export function buildCssVariables() {
+/**
+ * Every token as a `--himi-*` CSS custom property. Colours use the space-separated channel form.
+ * `mode` picks the light or dark values for colours and shadows; gradients, radii and motion are theme-independent
+ * and only emitted for the light (root) set.
+ */
+export function buildCssVariables(mode = 'light') {
+  const dark = mode === 'dark';
   const vars = {};
 
-  for (const [family, scale] of Object.entries(palette)) {
+  for (const [family, scale] of Object.entries(dark ? darkPalette : palette)) {
     for (const [shade, hex] of Object.entries(scale)) {
       vars[`--himi-${family}-${shade}`] = hexToChannels(hex);
     }
   }
 
-  for (const [name, hex] of Object.entries(semantic)) {
+  for (const [name, hex] of Object.entries(dark ? darkSemantic : semantic)) {
     vars[`--himi-${name}`] = hexToChannels(hex);
   }
 
-  for (const [name, value] of Object.entries(gradients)) {
-    vars[`--himi-gradient-${name}`] = value;
-  }
-
-  for (const [name, value] of Object.entries(shadows)) {
+  for (const [name, value] of Object.entries(dark ? darkShadows : shadows)) {
     vars[`--himi-shadow-${name}`] = value;
   }
 
-  for (const [name, value] of Object.entries(radii)) {
-    vars[`--himi-radius-${name}`] = value;
+  if (!dark) {
+    for (const [name, value] of Object.entries(gradients)) {
+      vars[`--himi-gradient-${name}`] = value;
+    }
+
+    for (const [name, value] of Object.entries(radii)) {
+      vars[`--himi-radius-${name}`] = value;
+    }
+
+    for (const [name, value] of Object.entries(motion)) {
+      vars[`--himi-${name === 'ease' ? 'ease' : `duration-${name}`}`] = value;
+    }
   }
 
-  for (const [name, value] of Object.entries(motion)) {
-    vars[`--himi-${name === 'ease' ? 'ease' : `duration-${name}`}`] = value;
+  return vars;
+}
+
+/** `--himi-solid-*`: the light-theme palette, never overridden, for fills that must keep their colour. */
+export function buildSolidVariables() {
+  const vars = {};
+
+  for (const [family, scale] of Object.entries(palette)) {
+    for (const [shade, hex] of Object.entries(scale)) {
+      vars[`--himi-solid-${family}-${shade}`] = hexToChannels(hex);
+    }
   }
 
   return vars;
@@ -255,3 +372,17 @@ export function tailwindSemantic() {
     Object.keys(semantic).map((name) => [name, `rgb(var(--himi-${name}) / <alpha-value>)`])
   );
 }
+
+/** Like `tailwindScale`, but shades from `SOLID_FROM` up always use the light-theme value (backgrounds, gradients). */
+export function tailwindSolidScale(family) {
+  return Object.fromEntries(
+    Object.keys(palette[family]).map((shade) => [
+      shade,
+      Number(shade) >= SOLID_FROM
+        ? `rgb(var(--himi-solid-${family}-${shade}) / <alpha-value>)`
+        : `rgb(var(--himi-${family}-${shade}) / <alpha-value>)`
+    ])
+  );
+}
+
+export const FAMILIES = Object.keys(palette);

@@ -447,5 +447,14 @@ export default {
   'classroom.end.title': 'End this session?',
   'classroom.end.text': 'The agenda, notes, questions and summary of this room will be deleted from this browser.',
   'classroom.end.confirm': 'End and delete',
-  'classroom.storageFailed': 'This room could not be saved in this browser (storage may be full or blocked). It will be lost when you leave this page.'
+  'classroom.storageFailed': 'This room could not be saved in this browser (storage may be full or blocked). It will be lost when you leave this page.',
+  'theme.light': 'Light',
+  'theme.dark': 'Dark',
+  'theme.system': 'Match my device',
+  'theme.switchToDark': 'Switch to dark theme',
+  'theme.switchToLight': 'Switch to light theme',
+  'settings.appearance.title': 'Appearance',
+  'settings.appearance.subtitle': 'Choose how HIMI looks. This is saved on this device only.',
+  'settings.appearance.theme': 'Theme',
+  'settings.appearance.current': 'Showing the {theme} theme right now.'
 };

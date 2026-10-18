@@ -125,3 +125,20 @@ test('camera access defaults to allowed, only ever starts from a button, and old
   assert.equal(normalizePreferences({ cameraEnabled: false }).cameraEnabled, false);
   assert.equal(normalizePreferences({ cameraEnabled: 'no' }).cameraEnabled, true);
 });
+
+test('theme defaults to following the device, accepts light/dark, and old saved preferences still load', () => {
+  assert.equal(DEFAULT_PREFERENCES.theme, 'system');
+  assert.equal(normalizePreferences({ uiLanguage: 'te' }).theme, 'system');
+  assert.equal(normalizePreferences({ theme: 'dark' }).theme, 'dark');
+  assert.equal(normalizePreferences({ theme: 'light' }).theme, 'light');
+  assert.equal(normalizePreferences({ theme: 'neon' }).theme, 'system');
+  assert.equal(normalizePreferences({ theme: 1 }).theme, 'system');
+});
+
+test('the theme choice is saved and reloaded', () => {
+  const storage = memoryStorage();
+  const store = createPreferencesStore({ storage });
+  store.update({ theme: 'dark' });
+  assert.equal(JSON.parse(storage.data.get(PREFERENCES_STORAGE_KEY)).preferences.theme, 'dark');
+  assert.equal(loadPreferences(storage).preferences.theme, 'dark');
+});
