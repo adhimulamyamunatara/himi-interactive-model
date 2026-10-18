@@ -33,6 +33,8 @@ export const MAX_ENTRIES = 80;
  *   error      { errorKind, message }          the request failed; retry is available
  *   stopped    {}                              the student stopped the request; retry is available
  *   notice     { code }                        a short system line
+ *
+ * An answer entry carries `basic: true` when it came from the local basic mode (`fallback`) instead of the AI.
  */
 
 export function createCompanionSession({
@@ -52,6 +54,7 @@ export function createCompanionSession({
     error: null,
     celebrating: false,
     teaching: false,
+    basic: false,
     lastQuestion: null
   };
   let celebrateTimer = null;
@@ -84,12 +87,27 @@ export function createCompanionSession({
     }, TEACHING_MS);
   };
 
-  /** Run one request. The question's user entry is added by the caller (or already exists, for a retry). */
-  async function run(text, buildRequest, subject) {
+  /**
+   * Run one request. The question's user entry is added by the caller (or already exists, for a retry).
+   *
+   * `fallback(text, errorKind)` (live conversations only) may turn a failure into a basic-mode reply `{text, language}`
+   * so the conversation does not stop when the AI cannot answer. `timeoutMs` abandons a request that takes too
+   * long and treats it as a failure (kind 'timeout').
+   */
+  async function run(text, buildRequest, subject, { fallback = null, timeoutMs = 0 } = {}) {
     const mine = epoch;
     publish({ status: 'thinking', error: null, lastQuestion: { text, subject }, teaching: false });
 
+    let timedOut = false;
+    const timer = timeoutMs > 0
+      ? setTimer(() => {
+          timedOut = true;
+          tutor.cancel();
+        }, timeoutMs)
+      : null;
+
     const outcome = await tutor.send(buildRequest, text);
+    clearTimer(timer);
 
     if (!outcome.started) {
       // The tutor refused to start (it believed another request was running); never stay "thinking" for nothing.
@@ -101,37 +119,51 @@ export function createCompanionSession({
     }
 
     // The conversation was reset, or the request was stopped, while we waited: the answer is not wanted.
-    if (mine !== epoch || outcome.reason === 'stale') {
+    if (mine !== epoch || (outcome.reason === 'stale' && !timedOut)) {
       return { started: true, reason: 'stale' };
     }
 
-    if (outcome.reason === 'error') {
-      const error = tutor.getSnapshot().error ?? { kind: 'server', message: null };
-      publish({
-        status: 'error',
-        error,
-        entries: append({ kind: 'error', errorKind: error.kind, message: error.message })
-      });
-      return { started: true, reason: 'error' };
+    if (outcome.reason === 'error' || timedOut || !tutor.getSnapshot().result) {
+      const failed = timedOut
+        ? { kind: 'timeout', message: 'HIMI took too long to answer. Please try again.' }
+        : outcome.reason === 'error'
+          ? tutor.getSnapshot().error ?? { kind: 'server', message: null }
+          : { kind: 'invalid', message: null };
+
+      return fail(failed, text, subject, fallback);
     }
 
     const result = tutor.getSnapshot().result;
 
-    if (!result) {
-      publish({ status: 'error', error: { kind: 'invalid', message: null }, entries: append({ kind: 'error', errorKind: 'invalid', message: null }) });
-      return { started: true, reason: 'error' };
-    }
-
     if (result.outcome === 'answer') {
-      publish({ status: 'idle', entries: append({ kind: 'answer', text: result.answer, result, subject }) });
+      const entries = append({ kind: 'answer', text: result.answer, result, subject });
+      publish({ status: 'idle', basic: false, entries });
       startTeaching();
-    } else if (result.outcome === 'handoff') {
-      publish({ status: 'idle', entries: append({ kind: 'handoff', result, handoff: result.handoff, subject }) });
-    } else {
-      publish({ status: 'idle', entries: append({ kind: 'clarify', result, subject }) });
+      return { started: true, entry: entries[entries.length - 1] };
     }
 
-    return { started: true };
+    const kind = result.outcome === 'handoff' ? 'handoff' : 'clarify';
+    const entries = append(kind === 'handoff' ? { kind, result, handoff: result.handoff, subject } : { kind, result, subject });
+    publish({ status: 'idle', basic: false, entries });
+    return { started: true, entry: entries[entries.length - 1] };
+  }
+
+  /** The request failed: a basic-mode reply if the caller allows one, otherwise a retryable error line. */
+  function fail(error, text, subject, fallback) {
+    const basic = typeof fallback === 'function' ? fallback(text, error.kind) : null;
+
+    if (basic?.text) {
+      const language = basic.language === 'te' ? 'te' : 'en';
+      const result = { outcome: 'answer', answer: basic.text, language, plan: null, clarifyingQuestion: null, followUps: [], suggestedActions: [], basic: true };
+      const entries = append({ kind: 'answer', text: basic.text, result, subject, basic: true });
+      publish({ status: 'idle', error: null, basic: true, entries });
+      startTeaching();
+      return { started: true, entry: entries[entries.length - 1], reason: 'basic' };
+    }
+
+    const entries = append({ kind: 'error', errorKind: error.kind, message: error.message });
+    publish({ status: 'error', error, entries });
+    return { started: true, reason: 'error', entry: entries[entries.length - 1] };
   }
 
   return {
@@ -149,7 +181,7 @@ export function createCompanionSession({
      * @param {{subject?: string}} [options] the subject the question was asked under (kept with the answer)
      * @returns {Promise<{started: boolean, reason?: string, to?: string}>}
      */
-    async send(text, buildRequest, { subject = '' } = {}) {
+    async send(text, buildRequest, { subject = '', fallback = null, timeoutMs = 0 } = {}) {
       const trimmed = typeof text === 'string' ? text.trim() : '';
 
       if (!trimmed) {
@@ -171,15 +203,15 @@ export function createCompanionSession({
         const user = { id: nextId(), kind: 'user', text: trimmed };
         const open = { id: nextId(), kind: 'open', target: command.target, to: command.to };
         publish({ entries: trim([...snapshot.entries, user, open]), error: null });
-        return { started: true, reason: 'local', to: command.to };
+        return { started: true, reason: 'local', to: command.to, entry: open };
       }
 
       publish({ entries: append({ kind: 'user', text: trimmed }) });
-      return run(trimmed, buildRequest, subject);
+      return run(trimmed, buildRequest, subject, { fallback, timeoutMs });
     },
 
     /** Ask the last question again after a failure or a stop. The failed line is replaced, not duplicated. */
-    async retry(buildRequest) {
+    async retry(buildRequest, { fallback = null, timeoutMs = 0 } = {}) {
       const last = snapshot.lastQuestion;
       const failed = [...snapshot.entries].reverse().find((entry) => entry.kind === 'error' || entry.kind === 'stopped');
 
@@ -188,7 +220,7 @@ export function createCompanionSession({
       }
 
       publish({ entries: snapshot.entries.filter((entry) => entry.id !== failed.id) });
-      return run(last.text, buildRequest, last.subject);
+      return run(last.text, buildRequest, last.subject, { fallback, timeoutMs });
     },
 
     /** Stop the running request. Its answer, if it still arrives, is discarded. */
@@ -220,7 +252,7 @@ export function createCompanionSession({
       counter = 0;
       clearTimers();
       tutor.reset();
-      publish({ epoch, entries: [], status: 'idle', error: null, celebrating: false, teaching: false, lastQuestion: null });
+      publish({ epoch, entries: [], status: 'idle', error: null, celebrating: false, teaching: false, basic: false, lastQuestion: null });
     },
 
     /**

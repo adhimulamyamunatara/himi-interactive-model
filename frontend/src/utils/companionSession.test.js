@@ -59,7 +59,9 @@ describe('message lifecycle', () => {
     assert.deepEqual(kinds(session), ['user']);
 
     tutor.calls[0].resolve(answer('A deadlock is a standstill.'));
-    assert.deepEqual(await sending, { started: true });
+    const done = await sending;
+    assert.equal(done.started, true);
+    assert.equal(done.entry.text, 'A deadlock is a standstill.');
 
     const snapshot = session.getSnapshot();
     assert.equal(snapshot.status, 'idle');
@@ -164,7 +166,9 @@ describe('failure, stop and retry', () => {
     const sending = session.send('q', build);
     tutor.calls[0].reject(new Error('server down'));
 
-    assert.deepEqual(await sending, { started: true, reason: 'error' });
+    const failed = await sending;
+    assert.equal(failed.started, true);
+    assert.equal(failed.reason, 'error');
     const snapshot = session.getSnapshot();
     assert.equal(snapshot.status, 'error');
     assert.equal(snapshot.error.kind, 'server');
@@ -318,7 +322,9 @@ describe('local open commands', () => {
     const { session, tutor } = make();
     const result = await session.send('open the whiteboard', build);
 
-    assert.deepEqual(result, { started: true, reason: 'local', to: '/whiteboard' });
+    assert.equal(result.started, true);
+    assert.equal(result.reason, 'local');
+    assert.equal(result.to, '/whiteboard');
     assert.equal(tutor.calls.length, 0);
     assert.deepEqual(kinds(session), ['user', 'open']);
     assert.equal(session.getSnapshot().entries[1].to, '/whiteboard');
@@ -400,5 +406,116 @@ describe('celebrating and housekeeping', () => {
     const seen = calls;
     await session.send('open notes', build);
     assert.equal(calls, seen);
+  });
+});
+
+describe('basic-mode fallback and timeout (live conversations)', () => {
+  const basic = (text) => ({ text: `basic: ${text}`, language: 'en' });
+
+  test('a failed request becomes a basic-mode reply, flagged as basic, and the conversation carries on', async () => {
+    const { session, tutor } = make();
+    const sending = session.send('hello', build, { subject: 'DBMS', fallback: basic });
+
+    tutor.calls[0].reject(new Error('Gemini is down'));
+    const done = await sending;
+
+    assert.equal(done.reason, 'basic');
+    assert.deepEqual(kinds(session), ['user', 'answer']);
+    const entry = session.getSnapshot().entries[1];
+    assert.equal(entry.basic, true);
+    assert.equal(entry.text, 'basic: hello');
+    assert.equal(entry.result.basic, true);
+    assert.deepEqual(entry.result.followUps, []);
+    assert.equal(session.getSnapshot().status, 'idle');
+    assert.equal(session.getSnapshot().basic, true);
+    assert.equal(session.getSnapshot().teaching, true);
+  });
+
+  test('a real answer afterwards clears the basic flag, and a basic reply never becomes AI context', async () => {
+    const { session, tutor } = make();
+    const first = session.send('hello', build, { fallback: basic });
+    tutor.calls[0].reject(new Error('down'));
+    await first;
+
+    const second = session.send('what is TCP?', build, { fallback: basic });
+    tutor.calls[1].resolve(answer('TCP is reliable.'));
+    await second;
+
+    assert.equal(session.getSnapshot().basic, false);
+    // the second request's history must not contain the basic reply
+    assert.deepEqual(tutor.calls[1].request.history, []);
+  });
+
+  test('without a fallback a failure is still a retryable error line (unchanged behaviour)', async () => {
+    const { session, tutor } = make();
+    const sending = session.send('hello', build);
+    tutor.calls[0].reject(new Error('down'));
+    assert.equal((await sending).reason, 'error');
+    assert.deepEqual(kinds(session), ['user', 'error']);
+    assert.equal(session.getSnapshot().basic, false);
+  });
+
+  test('a fallback that has nothing to say leaves the normal error line', async () => {
+    const { session, tutor } = make();
+    const sending = session.send('hello', build, { fallback: () => null });
+    tutor.calls[0].reject(new Error('down'));
+    assert.equal((await sending).reason, 'error');
+    assert.deepEqual(kinds(session), ['user', 'error']);
+  });
+
+  test('a request that takes too long is abandoned and answered in basic mode', async () => {
+    const { session, tutor, timers } = make();
+    const sending = session.send('hello', build, { fallback: basic, timeoutMs: 20_000 });
+
+    assert.deepEqual(timers.durations(), [20_000]);
+    timers.fireAll();
+    const done = await sending;
+
+    assert.equal(done.reason, 'basic');
+    assert.equal(session.getSnapshot().entries.at(-1).text, 'basic: hello');
+    // the slow answer that arrives afterwards is dropped
+    tutor.calls[0].resolve(answer('too late'));
+    await Promise.resolve();
+    assert.equal(session.getSnapshot().entries.filter((e) => e.kind === 'answer').length, 1);
+  });
+
+  test('a timeout without a fallback is an error line that names the timeout', async () => {
+    const { session, timers } = make();
+    const sending = session.send('hello', build, { timeoutMs: 5_000 });
+    timers.fireAll();
+    await sending;
+    const entry = session.getSnapshot().entries.at(-1);
+    assert.equal(entry.kind, 'error');
+    assert.equal(entry.errorKind, 'timeout');
+  });
+
+  test('the timeout timer is cleared once an answer arrives, and cancelling is not a timeout', async () => {
+    const { session, tutor, timers } = make();
+    const sending = session.send('hello', build, { fallback: basic, timeoutMs: 20_000 });
+    tutor.calls[0].resolve(answer('Hi.'));
+    await sending;
+    assert.equal(timers.count() === 0 || timers.durations().every((ms) => ms !== 20_000), true);
+
+    const second = session.send('again', build, { fallback: basic, timeoutMs: 20_000 });
+    session.cancel();
+    assert.equal((await second).reason, 'stale');
+    assert.equal(session.getSnapshot().entries.at(-1).kind, 'stopped');
+  });
+
+  test('send reports the entry it created so a live view can speak exactly that reply', async () => {
+    const { session, tutor } = make();
+    const sending = session.send('open the quiz page', build);
+    const local = await sending;
+    assert.equal(local.entry.kind, 'open');
+    assert.equal(tutor.calls.length, 0);
+  });
+
+  test('start over clears the basic flag', async () => {
+    const { session, tutor } = make();
+    const sending = session.send('hello', build, { fallback: basic });
+    tutor.calls[0].reject(new Error('down'));
+    await sending;
+    session.reset();
+    assert.equal(session.getSnapshot().basic, false);
   });
 });
