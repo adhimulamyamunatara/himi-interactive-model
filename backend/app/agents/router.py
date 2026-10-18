@@ -33,6 +33,24 @@ _EXAMPLE = re.compile(
     re.IGNORECASE,
 )
 
+# The student is sharing code or asking for a code review: the Code Assistant (which sees the code properly) takes over.
+_CODE_HELP = re.compile(
+    r"```|"
+    r"\b(debug|fix|review|check|trace|explain|analy[sz]e)\s+(my|this|the|below|following|these)\s+(code|program|function|script|solution|snippet|loop|class|method)\b|"
+    r"\b(find|spot)\s+(the\s+)?(bugs?|errors?|mistakes?)\s+in\b|"
+    r"\bmy\s+(code|program|script)\b|"
+    r"\b(traceback|syntaxerror|nullpointerexception|segmentation fault|indexerror|typeerror|compile error|compilation error)\b|"
+    r"\b(time )?complexity of (my|this|the following)\b",
+    re.IGNORECASE,
+)
+# An explicit request to draw: the Diagram tool takes over. "What is an ER diagram?" is still an explanation.
+_VISUAL = re.compile(
+    r"\b(draw|sketch|visuali[sz]e|illustrate)\b|"
+    r"\b(make|create|generate|show|give)(\s+me)?(\s+(a|an|the))?\s*(simple\s+)?(diagram|flow[- ]?chart|mind ?map|visual)|"
+    r"\b(diagram|flow[- ]?chart) (of|for|showing|to explain)\b|రేఖాచిత్రం",
+    re.IGNORECASE,
+)
+
 # Words that carry no subject matter. A message made only of these needs a follow-up question.
 _FILLER = frozenset(
     "a an and about can could do does explain for give help how i is it me my of on please show something tell "
@@ -44,6 +62,15 @@ _TOPIC_PREFIX = re.compile(
     r"quiz me|test me|give me (a )?quiz|make (me )?a (quiz|study plan|revision plan|plan|schedule)|"
     r"create (a )?(study plan|revision plan|quiz|plan)|take (a|the) quiz|plan my|i want (a )?(quiz|study plan)"
     r")\s*(on|about|for|of)?\s*",
+    re.IGNORECASE,
+)
+
+
+_VISUAL_PREFIX = re.compile(
+    r"^(please\s+)?(can you\s+)?("
+    r"(draw|sketch|visuali[sz]e|illustrate)(\s+me)?|"
+    r"(make|create|generate|show|give)(\s+me)?"
+    r")(\s+(a|an|the))?\s*(simple\s+)?(diagram|flow[- ]?chart|mind ?map|visual explanation|visual|picture|sketch)?\s*(of|for|about|showing|to explain)?\s*",
     re.IGNORECASE,
 )
 
@@ -77,6 +104,17 @@ def extract_topic(request: TutorRequest) -> str | None:
     return request.topic
 
 
+def extract_visual_topic(request: TutorRequest) -> str | None:
+    """The thing to draw: what is left after the request phrase, else the chosen topic."""
+    remainder = _VISUAL_PREFIX.sub("", request.message.strip(), count=1)
+    remainder = clean_line(remainder).strip(" .?!,:;")
+
+    if remainder and remainder.lower() != request.message.strip().lower() and len(_content_words(remainder)) > 0:
+        return remainder[:MAX_TOPIC_CHARS]
+
+    return request.topic
+
+
 def classify_intent(request: TutorRequest) -> RouteDecision:
     message = request.message
 
@@ -88,6 +126,12 @@ def classify_intent(request: TutorRequest) -> RouteDecision:
 
     if _PLANNER.search(message):
         return RouteDecision("planner", "planner_phrase", extract_topic(request))
+
+    if _CODE_HELP.search(message):
+        return RouteDecision("code_help", "code_phrase")
+
+    if _VISUAL.search(message):
+        return RouteDecision("visual", "visual_phrase", extract_visual_topic(request))
 
     if request.helpMode == "hint" or _HINT.search(message):
         return RouteDecision("hint", "hint_requested")

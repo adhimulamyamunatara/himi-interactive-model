@@ -30,6 +30,8 @@ from app.schemas.tutor import (
 logger = logging.getLogger(__name__)
 
 ANSWER_INTENTS = ("explain", "hint", "worked_example", "revision")
+# Intents answered by handing the student to the matching tool instead of a model call.
+HANDOFF_KINDS = {"quiz": "quiz", "planner": "planner", "code_help": "code", "visual": "diagram"}
 
 
 def _with_default_actions(request: TutorRequest, output: TutorModelOutput) -> list[SuggestedAction]:
@@ -74,11 +76,13 @@ def run_tutor(request: TutorRequest) -> TutorResponse:
                 outcome="clarify", clarify=Clarification(reason="too_vague"),
             )
 
-        if decision.intent in ("quiz", "planner"):
+        if decision.intent in HANDOFF_KINDS:
+            # Another HIMI tool does this better than a chat answer, so no model call is spent here.
             trace.record("subject_tutor", "respond", "skipped")
             return _base_response(
                 request, request_id, decision, "orchestrator", budget, trace,
-                outcome="handoff", handoff=Handoff(kind=decision.intent, subject=request.subject, topic=decision.topic),
+                outcome="handoff",
+                handoff=Handoff(kind=HANDOFF_KINDS[decision.intent], subject=request.subject, topic=decision.topic),
             )
 
         output = subject_tutor.run(request, decision.intent, budget=budget, trace=trace)

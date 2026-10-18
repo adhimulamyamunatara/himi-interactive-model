@@ -26,7 +26,7 @@ MAX_PLAN_STEPS = 6
 MAX_FOLLOW_UPS = 3
 MAX_ACTIONS = 3
 
-Intent = Literal["explain", "hint", "worked_example", "revision", "quiz", "planner", "clarify"]
+Intent = Literal["explain", "hint", "worked_example", "revision", "quiz", "planner", "code_help", "visual", "clarify"]
 HelpMode = Literal["hint", "guided", "full"]
 Outcome = Literal["answer", "clarify", "handoff"]
 StepKind = Literal["learn", "example", "practice", "check"]
@@ -257,7 +257,8 @@ class Clarification(BaseModel):
 
 
 class Handoff(BaseModel):
-    kind: Literal["quiz", "planner"]
+    # The existing HIMI tool that should take over: the Quiz Generator, Study Planner, Code Assistant or Diagram tool.
+    kind: Literal["quiz", "planner", "code", "diagram"]
     subject: str
     topic: str | None = None
 
