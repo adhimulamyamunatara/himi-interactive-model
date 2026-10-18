@@ -17,6 +17,8 @@ export const MEMBER_PAGES = [
   { to: '/code', label: 'Code', labelKey: 'nav.code', footerLabel: 'Code Assistant', footerKey: 'nav.codeFull', primary: false },
   { to: '/diagrams', label: 'Diagrams', labelKey: 'nav.diagrams', primary: false },
   { to: '/camera', label: 'Camera', labelKey: 'nav.camera', footerLabel: 'Photo Helper', footerKey: 'nav.cameraFull', primary: false },
+  { to: '/campus', label: 'Campus', labelKey: 'nav.campus', footerLabel: 'Campus Assistant', footerKey: 'nav.campusFull', primary: false },
+  { to: '/classroom', label: 'Classroom', labelKey: 'nav.classroom', footerLabel: 'Virtual Classroom', footerKey: 'nav.classroomFull', primary: false },
   { to: '/learning-memory', label: 'Memory', labelKey: 'nav.memory', footerLabel: 'Learning Memory', footerKey: 'nav.memoryFull', primary: false },
   { to: '/profile', label: 'Profile', labelKey: 'nav.profile', primary: false }
 ];

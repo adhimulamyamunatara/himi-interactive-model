@@ -18,6 +18,8 @@ const LearningMemory = lazy(() => import('./pages/LearningMemory'));
 const Code = lazy(() => import('./pages/Code'));
 const Diagrams = lazy(() => import('./pages/Diagrams'));
 const Camera = lazy(() => import('./pages/Camera'));
+const Campus = lazy(() => import('./pages/Campus'));
+const Classroom = lazy(() => import('./pages/Classroom'));
 const Mentor = lazy(() => import('./pages/Mentor'));
 const Notes = lazy(() => import('./pages/Notes'));
 const Progress = lazy(() => import('./pages/Progress'));
@@ -68,6 +70,8 @@ export default function App() {
                   <Route path="/code" element={<ProtectedRoute><Code /></ProtectedRoute>} />
                   <Route path="/diagrams" element={<ProtectedRoute><Diagrams /></ProtectedRoute>} />
                   <Route path="/camera" element={<ProtectedRoute><Camera /></ProtectedRoute>} />
+                  <Route path="/campus" element={<ProtectedRoute><Campus /></ProtectedRoute>} />
+                  <Route path="/classroom" element={<ProtectedRoute><Classroom /></ProtectedRoute>} />
                   <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
                   <Route path="/whiteboard" element={<ProtectedRoute><Whiteboard /></ProtectedRoute>} />
                   <Route path="/learning-memory" element={<ProtectedRoute><LearningMemory /></ProtectedRoute>} />
