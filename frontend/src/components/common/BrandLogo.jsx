@@ -9,9 +9,9 @@
  * - `full`: emblem, wordmark and tagline, for hero and sign-in areas.
  */
 const VARIANTS = {
-  horizontal: { src: '/himi-logo-horizontal.png', width: 409, height: 205 },
-  mark: { src: '/himi-mark.png', width: 270, height: 241 },
-  full: { src: '/himi-logo-full.png', width: 517, height: 548 }
+  horizontal: { src: '/himi-logo-horizontal.png', width: 405, height: 206 },
+  mark: { src: '/himi-mark.png', width: 274, height: 237 },
+  full: { src: '/himi-logo-full.png', width: 479, height: 548 }
 };
 
 export default function BrandLogo({ variant = 'horizontal', className = 'h-10', alt = 'HIMI, your AI learning companion', ...props }) {

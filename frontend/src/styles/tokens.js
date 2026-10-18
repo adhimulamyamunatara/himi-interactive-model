@@ -1,8 +1,9 @@
 /**
  * HIMI design tokens: the single source of truth for brand colour, gradients, shadows, radii and motion.
  *
- * Every value is derived from the supplied logo (`public/HIMI AI Learning Companion Logo.png`), sampled
- * pixel-by-pixel:
+ * Every value was sampled pixel-by-pixel from the supplied logo artwork (`public/HIMI AI Learning Companion Logo.png`).
+ * The current open-eyes artwork uses a slightly more vivid blue for the wordmark than the values below; these
+ * tokens were kept so the interface colours did not shift:
  *   navy wordmark   #0b2955   deep navy cap  #0e3472   tagline slate  #384b6b
  *   robot indigo    #364ee1   robot violet   #675bf9   sky blue       #2f95fb / #477ef7 / #2075dc
  *   book cyan       #14bbea   book green     #38cd93 / #1cb597         teal spark  #25bfb7
