@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiFileText, FiMessageCircle, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiFileText, FiMessageCircle, FiPenTool, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -220,6 +220,12 @@ export default function Dashboard() {
                 label="Summarise PDF notes"
                 description="Upload a PDF and get key concepts and revision questions"
                 to="/notes"
+              />
+              <QuickAction
+                icon={FiPenTool}
+                label="Whiteboard"
+                description="Sketch diagrams and formulas, then export them as an image"
+                to="/whiteboard"
               />
               <QuickAction
                 icon={FiSliders}

@@ -19,6 +19,7 @@ const Notes = lazy(() => import('./pages/Notes'));
 const Progress = lazy(() => import('./pages/Progress'));
 const Quiz = lazy(() => import('./pages/Quiz'));
 const StudyPlanner = lazy(() => import('./pages/StudyPlanner'));
+const Whiteboard = lazy(() => import('./pages/Whiteboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function ProtectedRoute({ children }) {
@@ -60,6 +61,7 @@ export default function App() {
                   <Route path="/study-planner" element={<ProtectedRoute><StudyPlanner /></ProtectedRoute>} />
                   <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
                   <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+                  <Route path="/whiteboard" element={<ProtectedRoute><Whiteboard /></ProtectedRoute>} />
                   <Route path="/learning-memory" element={<ProtectedRoute><LearningMemory /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="*" element={<NotFound />} />
