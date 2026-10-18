@@ -10,6 +10,7 @@ from datetime import date
 from typing import Any
 
 from app.core.config import settings
+from app.core.learning_profile_prompt import build_profile_section, with_profile_note
 from app.core.study_planner_prompts import (
     PLAN_TYPE_DESCRIPTIONS,
     STUDY_PLANNER_SYSTEM_PROMPT,
@@ -108,12 +109,24 @@ def build_study_plan_prompt(request: StudyPlanGenerateRequest, study_dates: list
         "additional_instructions": request.additional_instructions,
     }
 
-    return STUDY_PLANNER_USER_PROMPT_TEMPLATE.format(
+    prompt = STUDY_PLANNER_USER_PROMPT_TEMPLATE.format(
         request_json=json.dumps(request_document, ensure_ascii=False, indent=2),
         plan_type_description=PLAN_TYPE_DESCRIPTIONS[get_plan_type(len(study_dates))],
         max_tasks_per_day=MAX_TASKS_PER_DAY,
         min_task_minutes=MIN_TASK_MINUTES,
         max_notes=MAX_NOTES,
+    )
+
+    if request.learning_profile is None:
+        return prompt
+
+    return (
+        prompt
+        + build_profile_section(request.learning_profile)
+        + "\n\nApply the personalization to task choice and wording: give extra time to the topics marked difficult "
+        "(only for the selected subjects), favour the preferred revision style in 'revise' tasks and keep the "
+        "explanation level in mind. Every scheduling rule above still applies, and the output must still be only "
+        "the JSON structure above."
     )
 
 
@@ -317,7 +330,7 @@ def generate_study_plan(request: StudyPlanGenerateRequest) -> StudyPlan:
         try:
             raw_text = generate_text(
                 prompt,
-                system_instruction=STUDY_PLANNER_SYSTEM_PROMPT,
+                system_instruction=with_profile_note(STUDY_PLANNER_SYSTEM_PROMPT, request.learning_profile),
                 json_output=True,
                 temperature=0.4,
                 timeout_seconds=GEMINI_TIMEOUT_SECONDS,

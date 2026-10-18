@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.subjects import SUBJECTS
+from app.schemas.learning_profile import LearningProfile
 
 Difficulty = Literal["Easy", "Medium", "Hard"]
 QuestionCount = Literal[5, 10, 15]
@@ -26,6 +27,7 @@ class QuizGenerateRequest(BaseModel):
     topic: str | None = Field(default=None, max_length=MAX_TOPIC_LENGTH)
     num_questions: QuestionCount = 5
     difficulty: Difficulty = "Medium"
+    learning_profile: LearningProfile | None = None
 
     @field_validator("subject")
     @classmethod

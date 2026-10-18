@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from app.core.config import settings
+from app.core.learning_profile_prompt import build_profile_section, with_profile_note
 from app.core.quiz_prompts import DEFAULT_TOPIC_TEXT, QUIZ_SYSTEM_PROMPT, QUIZ_USER_PROMPT_TEMPLATE
 from app.schemas.quiz import QuizGenerateRequest, QuizPayload, QuizQuestion
 from app.services.gemini_service import GeminiConfigError, GeminiRequestError, GeminiTimeoutError, generate_text
@@ -61,11 +62,22 @@ class QuizValidationError(ValueError):
 
 def build_quiz_prompt(request: QuizGenerateRequest) -> str:
     """Render the user prompt for ``request``."""
-    return QUIZ_USER_PROMPT_TEMPLATE.format(
+    prompt = QUIZ_USER_PROMPT_TEMPLATE.format(
         subject=request.subject,
         topic=request.topic or DEFAULT_TOPIC_TEXT,
         difficulty=request.difficulty,
         num_questions=request.num_questions,
+    )
+
+    if request.learning_profile is None:
+        return prompt
+
+    return (
+        prompt
+        + build_profile_section(request.learning_profile)
+        + "\n\nApply the personalization only to the wording of the explanations and, when they fit the subject, "
+        "to emphasis on topics marked difficult. Question difficulty stays as requested. "
+        "The output must still be only the JSON structure above."
     )
 
 
@@ -197,7 +209,7 @@ def generate_quiz(request: QuizGenerateRequest) -> QuizPayload:
         try:
             raw_text = generate_text(
                 prompt,
-                system_instruction=QUIZ_SYSTEM_PROMPT,
+                system_instruction=with_profile_note(QUIZ_SYSTEM_PROMPT, request.learning_profile),
                 json_output=True,
                 timeout_seconds=GEMINI_TIMEOUT_SECONDS,
                 model_name=settings.gemini_quiz_model,

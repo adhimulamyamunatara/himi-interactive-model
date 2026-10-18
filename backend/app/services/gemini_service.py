@@ -4,7 +4,9 @@ import logging
 from datetime import datetime, timezone
 
 from app.core.config import settings
+from app.core.learning_profile_prompt import build_profile_section, with_profile_note
 from app.core.prompts import SYSTEM_PROMPT
+from app.schemas.learning_profile import LearningProfile
 
 try:
     import google.generativeai as genai
@@ -48,7 +50,9 @@ def _result(response: str, status: str) -> dict[str, str]:
     }
 
 
-def generate_chat_response(message: str, subject: str, user_name: str) -> dict[str, str]:
+def generate_chat_response(
+    message: str, subject: str, user_name: str, learning_profile: LearningProfile | None = None
+) -> dict[str, str]:
     """Generate a chat response from Gemini.
 
     Never raises: on any failure it returns ``status='error'`` with a friendly message so the API
@@ -64,12 +68,15 @@ def generate_chat_response(message: str, subject: str, user_name: str) -> dict[s
 
     try:
         genai.configure(api_key=settings.gemini_api_key)
-        model = genai.GenerativeModel(settings.gemini_model, system_instruction=SYSTEM_PROMPT)
+        model = genai.GenerativeModel(
+            settings.gemini_model, system_instruction=with_profile_note(SYSTEM_PROMPT, learning_profile)
+        )
         prompt = (
             f"Student name: {user_name}\n"
             f"Subject: {subject}\n"
             f"Question: {message}\n"
             "Respond as an engineering mentor."
+            f"{build_profile_section(learning_profile)}"
         )
         result = model.generate_content(prompt)
         text = getattr(result, "text", None)

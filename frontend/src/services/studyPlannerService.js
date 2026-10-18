@@ -1,4 +1,5 @@
 import { buildPlanRequest, parsePlanResponse } from '../utils/studyPlanner';
+import { getLearningProfileStore } from '../utils/learningProfileStore';
 import apiClient from './apiClient';
 
 // The backend allows up to 120s per attempt (larger models can take ~45s for a month-long plan).
@@ -14,7 +15,8 @@ const PLAN_REQUEST_TIMEOUT_MS = 260_000;
  * @throws Axios errors for network/HTTP failures and `InvalidPlanResponseError` for malformed payloads.
  */
 export async function generateStudyPlan(config, today, { signal } = {}) {
-  const { data } = await apiClient.post('/api/study-planner/generate', buildPlanRequest(config, today), {
+  const request = getLearningProfileStore().personalize(buildPlanRequest(config, today), 'learning_profile');
+  const { data } = await apiClient.post('/api/study-planner/generate', request, {
     signal,
     timeout: PLAN_REQUEST_TIMEOUT_MS
   });

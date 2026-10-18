@@ -1,3 +1,4 @@
+import { getLearningProfileStore } from '../utils/learningProfileStore';
 import apiClient from './apiClient';
 
 /**
@@ -8,6 +9,8 @@ import apiClient from './apiClient';
  * @returns {Promise<{response: string, timestamp: string, status: string}>}
  */
 export async function sendChatMessage(payload, { signal } = {}) {
-  const { data } = await apiClient.post('/api/chat', payload, { signal });
+  // Adds the student's learning profile only when personalisation is on and a profile has been saved.
+  const request = getLearningProfileStore().personalize(payload, 'learningProfile');
+  const { data } = await apiClient.post('/api/chat', request, { signal });
   return data;
 }

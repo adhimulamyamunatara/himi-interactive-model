@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
+import { MEMBER_PAGES } from '../../utils/navigation';
 
 const PRODUCT_LINKS = [
   { to: '/', label: 'Home' },
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/chat', label: 'Chat' },
-  { to: '/quiz', label: 'Quiz' },
-  { to: '/study-planner', label: 'Study Planner' },
-  { to: '/profile', label: 'Profile' }
+  ...MEMBER_PAGES.map((page) => ({ to: page.to, label: page.footerLabel ?? page.label }))
 ];
 
 const STACK = ['React 19 + Vite', 'Tailwind CSS', 'Framer Motion', 'FastAPI', 'Gemini API'];

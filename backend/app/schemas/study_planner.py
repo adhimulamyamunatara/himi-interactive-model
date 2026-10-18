@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.subjects import SUBJECTS
+from app.schemas.learning_profile import LearningProfile
 from app.utils.study_dates import WEEKDAYS, get_study_dates
 
 Weekday = Literal["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -102,6 +103,7 @@ class StudyPlanGenerateRequest(BaseModel):
     # validate_default so that an omitted value also becomes "every day".
     preferred_study_days: list[Weekday] | None = Field(default=None, validate_default=True)
     additional_instructions: str | None = Field(default=None, max_length=MAX_INSTRUCTIONS_LENGTH)
+    learning_profile: LearningProfile | None = None
 
     @field_validator("title")
     @classmethod

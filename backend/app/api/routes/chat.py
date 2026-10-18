@@ -13,5 +13,7 @@ def create_chat_response(payload: ChatRequest) -> ChatResponse:
     Declared as a plain ``def`` on purpose: the Gemini call is blocking, so FastAPI runs it in a
     worker thread instead of freezing the event loop for other requests.
     """
-    result = generate_chat_response(payload.message, payload.subject, payload.userName)
+    result = generate_chat_response(
+        payload.message, payload.subject, payload.userName, learning_profile=payload.learningProfile
+    )
     return ChatResponse(**result)
