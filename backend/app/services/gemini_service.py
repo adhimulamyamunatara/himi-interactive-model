@@ -11,7 +11,24 @@ try:
 except Exception:  # pragma: no cover - optional import guard
     genai = None
 
+try:
+    from google.api_core import exceptions as google_exceptions
+except Exception:  # pragma: no cover - optional import guard
+    google_exceptions = None
+
 logger = logging.getLogger(__name__)
+
+
+class GeminiConfigError(RuntimeError):
+    """Gemini cannot be used because the key or the SDK is missing."""
+
+
+class GeminiRequestError(RuntimeError):
+    """The Gemini request failed or returned nothing usable."""
+
+
+class GeminiTimeoutError(GeminiRequestError):
+    """The Gemini request exceeded its deadline."""
 
 
 def _build_fallback_response(subject: str, user_name: str, reason: str) -> str:
@@ -65,3 +82,54 @@ def generate_chat_response(message: str, subject: str, user_name: str) -> dict[s
     except Exception:
         logger.exception("Gemini request failed (model=%s).", settings.gemini_model)
         return _result(_build_fallback_response(subject, user_name, "the AI request failed"), "error")
+
+
+def generate_text(
+    prompt: str,
+    *,
+    system_instruction: str,
+    json_output: bool = False,
+    temperature: float = 0.7,
+    timeout_seconds: float = 60.0,
+    model_name: str | None = None,
+) -> str:
+    """Return raw model text for ``prompt`` using the shared key.
+
+    The model defaults to the ``GEMINI_MODEL`` setting; pass ``model_name`` to override it per feature.
+
+    Unlike :func:`generate_chat_response` this raises instead of returning a fallback message, so
+    callers (such as the quiz generator) can decide how to react.
+
+    Raises:
+        GeminiConfigError: the API key or the SDK is missing.
+        GeminiTimeoutError: the request exceeded ``timeout_seconds``.
+        GeminiRequestError: any other upstream failure, or an empty response.
+    """
+    if not settings.gemini_api_key:
+        raise GeminiConfigError("GEMINI_API_KEY is not configured.")
+
+    if genai is None:
+        raise GeminiConfigError("The google-generativeai package is not installed.")
+
+    generation_config: dict[str, object] = {"temperature": temperature}
+    if json_output:
+        generation_config["response_mime_type"] = "application/json"
+
+    try:
+        genai.configure(api_key=settings.gemini_api_key)
+        model = genai.GenerativeModel(
+            model_name or settings.gemini_model,
+            system_instruction=system_instruction,
+            generation_config=generation_config,
+        )
+        result = model.generate_content(prompt, request_options={"timeout": timeout_seconds})
+        text = getattr(result, "text", None)
+    except Exception as exc:
+        if google_exceptions is not None and isinstance(exc, google_exceptions.DeadlineExceeded):
+            raise GeminiTimeoutError("Gemini request timed out.") from exc
+        raise GeminiRequestError(f"Gemini request failed: {type(exc).__name__}") from exc
+
+    if not text:
+        raise GeminiRequestError("Gemini returned an empty response.")
+
+    return text

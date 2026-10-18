@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBookOpen, FiEdit3, FiMessageCircle, FiShuffle, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBookOpen, FiCheckSquare, FiEdit3, FiMessageCircle, FiShuffle, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -20,7 +20,7 @@ import { SUBJECTS } from '../utils/subjects';
 const UPCOMING = [
   'Voice conversations',
   'Long-term memory and personalised learning',
-  'Quiz generator and study planner',
+  'Study planner',
   'Avatar-based mentor'
 ];
 
@@ -172,6 +172,12 @@ export default function Dashboard() {
                 label="Resume learning"
                 description={`Continue with ${selectedSubject}`}
                 to="/chat"
+              />
+              <QuickAction
+                icon={FiCheckSquare}
+                label="Quiz Generator"
+                description="Practise with an AI-written quiz on any subject"
+                to="/quiz"
               />
               <QuickAction
                 icon={FiShuffle}

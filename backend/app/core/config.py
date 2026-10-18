@@ -22,6 +22,10 @@ class Settings:
     )
     gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
+    # Optional: a faster model for quiz generation. Falls back to GEMINI_MODEL when unset.
+    gemini_quiz_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_QUIZ_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    )
 
  
 settings = Settings()
