@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FiRefreshCw, FiSend, FiSquare } from 'react-icons/fi';
+import { FiMic, FiRefreshCw, FiSend, FiSquare } from 'react-icons/fi';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import EmptyState from '../components/common/EmptyState';
@@ -10,15 +10,21 @@ import Input from '../components/common/Input';
 import SegmentedControl from '../components/common/SegmentedControl';
 import Select from '../components/common/Select';
 import MentorResult from '../components/mentor/MentorResult';
+import VoicePanel from '../components/voice/VoicePanel';
 import { useChat } from '../context/ChatContext';
 import { useUser } from '../context/UserContext';
+import { useAutoRead } from '../hooks/useAutoRead';
 import { usePreferences } from '../hooks/usePreferences';
+import { useSpeechInput } from '../hooks/useSpeechInput';
+import { useStopSpeechOnLeave } from '../hooks/useSpeechOutput';
 import { useTutorSession } from '../hooks/useTutorSession';
 import { useT } from '../i18n/I18nContext';
 import { loadQuizAttempts } from '../utils/analyticsStorage';
 import { LANGUAGES } from '../utils/preferences';
+import { appendTranscript } from '../utils/speechText';
 import { SUBJECTS } from '../utils/subjects';
 import { buildProgressSummary, buildTutorRequest, MAX_MESSAGE_CHARS, MAX_TOPIC_CHARS } from '../utils/tutor';
+import { voiceInputLanguageFor } from '../utils/voice';
 
 const HELP_OPTIONS = ['hint', 'guided', 'full'];
 
@@ -44,6 +50,30 @@ export default function Mentor() {
   const loading = session.status === 'loading';
   const trimmed = message.trim();
 
+  // Voice: dictation only fills the question box (the student still presses Ask), replies are read on request,
+  // or automatically when the student turned that on in their profile.
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const addTranscript = useCallback((text) => setMessage((current) => appendTranscript(current, text, MAX_MESSAGE_CHARS).value), []);
+  const voice = useSpeechInput({ resetKey: 'mentor', onTranscript: addTranscript });
+  const showVoice = preferences.voiceEnabled && voiceOpen;
+  useStopSpeechOnLeave('mentor');
+
+  const readableReplies = useMemo(
+    () => (session.status === 'success' && session.result ? [{ id: `mentor-${session.result.requestId}`, text: session.result.answer }] : []),
+    [session.status, session.result]
+  );
+  useAutoRead({ ownerKey: 'mentor', replies: readableReplies, voiceEnabled: preferences.voiceEnabled, autoReadReplies: preferences.autoReadReplies });
+
+  const toggleVoice = () => {
+    if (voiceOpen) {
+      voice.cancel();
+    } else {
+      voice.setLanguage(voiceInputLanguageFor(preferences.explanationLanguage));
+    }
+
+    setVoiceOpen(!voiceOpen);
+  };
+
   useEffect(() => {
     if (session.status === 'success') {
       resultRef.current?.focus({ preventScroll: false });
@@ -57,6 +87,7 @@ export default function Mentor() {
       return;
     }
 
+    voice.cancel();
     const outcome = await session.send(
       (history) =>
         buildTutorRequest({
@@ -133,9 +164,39 @@ export default function Mentor() {
           />
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="mentor-question" className="text-sm font-medium text-slate-700">
-              {t('mentor.question')}
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="mentor-question" className="text-sm font-medium text-slate-700">
+                {t('mentor.question')}
+              </label>
+              {preferences.voiceEnabled ? (
+                <button
+                  type="button"
+                  onClick={toggleVoice}
+                  disabled={loading}
+                  aria-pressed={showVoice}
+                  aria-label={t('voice.input')}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 disabled:opacity-60 ${
+                    voice.status === 'listening'
+                      ? 'animate-pulse border-rose-300 bg-rose-50 text-rose-600'
+                      : showVoice
+                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600'
+                  }`}
+                >
+                  <FiMic aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+            {showVoice ? (
+              <VoicePanel
+                voice={voice}
+                onClose={() => {
+                  voice.cancel();
+                  setVoiceOpen(false);
+                }}
+                submitLabel={t('mentor.ask')}
+              />
+            ) : null}
             <textarea
               id="mentor-question"
               ref={questionRef}

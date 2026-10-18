@@ -1,4 +1,5 @@
 import { chunkForSpeech, detectSpeechLang, toSpeakableText } from './speechText.js';
+import { pickVoice } from './voice.js';
 
 /**
  * Reads assistant replies aloud with the browser's speech synthesis (no audio is fetched from HIMI's servers).
@@ -74,6 +75,15 @@ export function createSpeechOutput({ synth = globalThis.speechSynthesis, Utteran
 
       const mine = token;
       const lang = detectSpeechLang(text);
+      let voice = null;
+
+      try {
+        // An installed voice for the language reads Telugu and English far better than the device default.
+        voice = pickVoice(synth.getVoices?.(), lang);
+      } catch {
+        voice = null;
+      }
+
       let position = 0;
 
       const fail = () => {
@@ -98,6 +108,11 @@ export function createSpeechOutput({ synth = globalThis.speechSynthesis, Utteran
         const utterance = new Utterance(chunks[position]);
         position += 1;
         utterance.lang = lang;
+
+        if (voice) {
+          utterance.voice = voice;
+        }
+
         utterance.onend = next;
         utterance.onerror = (event) => {
           // 'interrupted' and 'canceled' come from our own cancel(); anything else is a real failure.

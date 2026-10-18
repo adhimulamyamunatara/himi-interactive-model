@@ -11,6 +11,9 @@ import Card from '../components/common/Card';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Drawer from '../components/common/Drawer';
 import Select from '../components/common/Select';
+import { voiceInputLanguageFor } from '../utils/voice';
+import { useAutoRead } from '../hooks/useAutoRead';
+import { usePreferences } from '../hooks/usePreferences';
 import { useStopSpeechOnLeave } from '../hooks/useSpeechOutput';
 import { useChat } from '../context/ChatContext';
 import { useToast } from '../context/ToastContext';
@@ -50,6 +53,7 @@ export default function Chat() {
     clearActiveConversation,
     dismissLoadIssue
   } = useChat();
+  const { preferences } = usePreferences();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -59,6 +63,13 @@ export default function Chat() {
 
   // Replies read aloud stop when another chat opens, when this one is deleted, and when leaving the page.
   useStopSpeechOnLeave(activeConversationId);
+
+  // New replies are read aloud only when the student turned that on in their profile settings.
+  const readableReplies = useMemo(
+    () => messages.filter((message) => message.role === 'assistant' && !message.error).map((message) => ({ id: message.id, text: message.content })),
+    [messages]
+  );
+  useAutoRead({ ownerKey: activeConversationId, replies: readableReplies, voiceEnabled: preferences.voiceEnabled, autoReadReplies: preferences.autoReadReplies });
 
   // Learning stats cover everything the student has asked, across all conversations.
   const stats = useMemo(() => {
@@ -236,7 +247,7 @@ export default function Chat() {
               </div>
             ) : (
               messages.map((message) => (
-                <ChatMessage key={message.id} message={message} onRetry={retryMessage} disabled={loading} />
+                <ChatMessage key={message.id} message={message} onRetry={retryMessage} disabled={loading} voiceEnabled={preferences.voiceEnabled} />
               ))
             )}
             <AnimatePresence>{loading ? <TypingIndicator key="typing" /> : null}</AnimatePresence>
@@ -261,7 +272,14 @@ export default function Chat() {
                 </button>
               ))}
             </div>
-            <ChatComposer onSend={sendMessage} disabled={loading} subject={selectedSubject} voiceKey={activeConversationId} />
+            <ChatComposer
+              onSend={sendMessage}
+              disabled={loading}
+              subject={selectedSubject}
+              voiceKey={activeConversationId}
+              voiceEnabled={preferences.voiceEnabled}
+              dictationLanguage={voiceInputLanguageFor(preferences.explanationLanguage)}
+            />
           </footer>
         </Card>
 

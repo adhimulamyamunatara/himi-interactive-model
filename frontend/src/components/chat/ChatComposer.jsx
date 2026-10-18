@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { FiMic, FiSend } from 'react-icons/fi';
 import { useAutoResizeTextarea } from '../../hooks/useAutoResizeTextarea';
 import { useSpeechInput } from '../../hooks/useSpeechInput';
+import { useT } from '../../i18n/I18nContext';
 import { appendTranscript } from '../../utils/speechText';
 import VoicePanel from '../voice/VoicePanel';
 
@@ -12,7 +13,8 @@ const MAX_LENGTH = 2000;
  * Dictation (opt-in, from the mic button) only adds text to the box; sending is always the student's action.
  * `voiceKey` is the id of the open conversation: changing it cancels any dictation in progress.
  */
-export default function ChatComposer({ onSend, disabled = false, subject, voiceKey = null }) {
+export default function ChatComposer({ onSend, disabled = false, subject, voiceKey = null, voiceEnabled = true, dictationLanguage = null }) {
+  const { t } = useT();
   const [draft, setDraft] = useState('');
   const [voiceOpen, setVoiceOpen] = useState(false);
   const textareaRef = useAutoResizeTextarea(draft);
@@ -24,10 +26,15 @@ export default function ChatComposer({ onSend, disabled = false, subject, voiceK
   const toggleVoice = () => {
     if (voiceOpen) {
       voice.cancel();
+    } else if (dictationLanguage) {
+      voice.setLanguage(dictationLanguage);
     }
 
     setVoiceOpen(!voiceOpen);
   };
+
+  // With voice turned off in settings the panel and mic button are not rendered at all.
+  const showVoice = voiceEnabled && voiceOpen;
 
   const closeVoice = () => {
     voice.cancel();
@@ -62,7 +69,7 @@ export default function ChatComposer({ onSend, disabled = false, subject, voiceK
       onSubmit={handleSubmit}
       className="rounded-3xl border border-slate-200 bg-white p-3 shadow-card transition focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100"
     >
-      {voiceOpen ? <VoicePanel voice={voice} onClose={closeVoice} /> : null}
+      {showVoice ? <VoicePanel voice={voice} onClose={closeVoice} /> : null}
       <label htmlFor="chat-message" className="sr-only">
         Message HIMI about {subject}
       </label>
@@ -89,21 +96,23 @@ export default function ChatComposer({ onSend, disabled = false, subject, voiceK
               {draft.length}/{MAX_LENGTH}
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={toggleVoice}
-            aria-pressed={voiceOpen}
-            aria-label="Voice input"
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 ${
-              voice.status === 'listening'
-                ? 'animate-pulse border-rose-300 bg-rose-50 text-rose-600'
-                : voiceOpen
-                  ? 'border-blue-300 bg-blue-50 text-blue-700'
-                  : 'border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600'
-            }`}
-          >
-            <FiMic aria-hidden="true" />
-          </button>
+          {voiceEnabled ? (
+            <button
+              type="button"
+              onClick={toggleVoice}
+              aria-pressed={voiceOpen}
+              aria-label={t('voice.input')}
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 ${
+                voice.status === 'listening'
+                  ? 'animate-pulse border-rose-300 bg-rose-50 text-rose-600'
+                  : voiceOpen
+                    ? 'border-blue-300 bg-blue-50 text-blue-700'
+                    : 'border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-blue-600'
+              }`}
+            >
+              <FiMic aria-hidden="true" />
+            </button>
+          ) : null}
           <button
             type="submit"
             disabled={!canSend}

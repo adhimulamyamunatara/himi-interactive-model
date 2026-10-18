@@ -1,0 +1,87 @@
+/**
+ * Pure helpers for the voice features: which language to listen in, which installed voice can read a reply,
+ * and when a new reply may be read aloud automatically. No browser APIs are touched here, so all of it is
+ * covered by unit tests.
+ */
+
+/** Dictation language that matches the language the student asked HIMI to explain in. */
+export function voiceInputLanguageFor(explanationLanguage) {
+  return explanationLanguage === 'te' ? 'te-IN' : 'en-IN';
+}
+
+/** `te-IN` -> `te`. */
+const primary = (lang) => String(lang ?? '').toLowerCase().split(/[-_]/)[0];
+
+/**
+ * Pick the best installed speech voice for `lang`.
+ * An exact region match wins, then any voice for the same language. Returns null when none is installed
+ * (the reader then falls back to the device default, which may pronounce the text badly).
+ */
+export function pickVoice(voices, lang) {
+  const list = Array.isArray(voices) ? voices.filter((voice) => voice && typeof voice.lang === 'string') : [];
+  const wanted = String(lang ?? '').toLowerCase().replace('_', '-');
+  const exact = list.find((voice) => voice.lang.toLowerCase().replace('_', '-') === wanted);
+
+  if (exact) {
+    return exact;
+  }
+
+  return list.find((voice) => primary(voice.lang) === primary(wanted)) ?? null;
+}
+
+/**
+ * Whether a voice for `lang` is installed.
+ * `unknown` means the browser has not listed any voices yet (many load them lazily), so nothing can be claimed.
+ */
+export function voiceAvailability(voices, lang) {
+  if (!Array.isArray(voices) || voices.length === 0) {
+    return 'unknown';
+  }
+
+  return pickVoice(voices, lang) ? 'available' : 'missing';
+}
+
+/**
+ * Decides which new reply (if any) should be read aloud automatically.
+ *
+ * The first call for an owner (a conversation, or the Mentor page) only records what is already there, so
+ * opening old history never speaks. After that, the newest reply that was not there before is returned once.
+ * Call `next` on every change even when auto-read is off, so turning it on later never reads old replies.
+ */
+export function createAutoReadTracker() {
+  let owner;
+  let started = false;
+  let seen = new Set();
+
+  return {
+    /**
+     * @param {string | number | null} ownerKey which conversation these ids belong to
+     * @param {string[]} ids ids of the replies that can be read aloud, oldest first
+     * @returns {string | null}
+     */
+    next(ownerKey, ids) {
+      if (!started || owner !== ownerKey) {
+        started = true;
+        owner = ownerKey;
+        seen = new Set(ids);
+        return null;
+      }
+
+      let fresh = null;
+
+      for (const id of ids) {
+        if (!seen.has(id)) {
+          seen.add(id);
+          fresh = id;
+        }
+      }
+
+      return fresh;
+    }
+  };
+}
+
+/** Auto-read needs voice on, the preference on, and a browser that can speak. */
+export function canAutoRead({ voiceEnabled, autoReadReplies, supported }) {
+  return Boolean(voiceEnabled && autoReadReplies && supported);
+}

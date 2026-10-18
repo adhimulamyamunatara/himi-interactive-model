@@ -28,7 +28,7 @@ function UserBubble({ message }) {
   );
 }
 
-function AssistantBubble({ message, onRetry, disabled }) {
+function AssistantBubble({ message, onRetry, disabled, voiceEnabled }) {
   const { copied, copy } = useCopyToClipboard();
 
   if (message.error) {
@@ -74,7 +74,7 @@ function AssistantBubble({ message, onRetry, disabled }) {
             {copied ? <FiCheck aria-hidden="true" className="text-emerald-600" /> : <FiCopy aria-hidden="true" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
-          <ListenButton messageId={message.id} text={message.content} />
+          {voiceEnabled ? <ListenButton messageId={message.id} text={message.content} /> : null}
         </div>
       </div>
     </div>
@@ -82,7 +82,7 @@ function AssistantBubble({ message, onRetry, disabled }) {
 }
 
 /** A single chat bubble. Memoised so typing in the composer does not re-render the whole history. */
-function ChatMessage({ message, onRetry, disabled = false }) {
+function ChatMessage({ message, onRetry, disabled = false, voiceEnabled = true }) {
   return (
     <motion.article
       id={`message-${message.id}`}
@@ -94,7 +94,7 @@ function ChatMessage({ message, onRetry, disabled = false }) {
       {message.role === 'user' ? (
         <UserBubble message={message} />
       ) : (
-        <AssistantBubble message={message} onRetry={onRetry} disabled={disabled} />
+        <AssistantBubble message={message} onRetry={onRetry} disabled={disabled} voiceEnabled={voiceEnabled} />
       )}
     </motion.article>
   );

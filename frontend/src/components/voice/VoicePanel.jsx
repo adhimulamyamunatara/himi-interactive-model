@@ -1,36 +1,38 @@
 import { FiAlertCircle, FiInfo, FiMic, FiSquare, FiX } from 'react-icons/fi';
+import { useT } from '../../i18n/I18nContext';
 import { SUPPORT_MESSAGES, VOICE_LANGUAGES } from '../../utils/speechInput';
 
 const START_LABELS = {
-  idle: 'Start listening',
-  starting: 'Waiting for microphone…',
-  listening: 'Stop listening',
-  stopping: 'Finishing…'
+  idle: 'voice.start',
+  starting: 'voice.starting',
+  listening: 'voice.listening',
+  stopping: 'voice.stopping'
 };
 
 const STATUS_TEXT = {
-  starting: 'Your browser may ask for permission to use the microphone.',
-  listening: 'Listening… speak now.',
-  stopping: 'Finishing up…'
+  starting: 'voice.status.starting',
+  listening: 'voice.status.listening',
+  stopping: 'voice.status.stopping'
 };
 
 /**
  * Voice input controls shown above the composer. Dictation fills the normal message box, so the student
  * always reviews and edits the text and presses Send themselves. The panel is explicit about where audio goes.
  */
-export default function VoicePanel({ voice, onClose }) {
+export default function VoicePanel({ voice, onClose, submitLabel }) {
+  const { t } = useT();
   const busy = voice.status !== 'idle';
   const listening = voice.status === 'listening';
   const unavailable = !voice.supported;
 
   return (
-    <div role="group" aria-label="Voice input" className="mb-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+    <div role="group" aria-label={t('voice.input')} className="mb-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-900">Speak your question</p>
+        <p className="text-sm font-semibold text-slate-900">{t('voice.speakQuestion')}</p>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close voice input"
+          aria-label={t('voice.closeInput')}
           className="rounded-lg p-1 text-slate-500 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
         >
           <FiX aria-hidden="true" />
@@ -46,7 +48,7 @@ export default function VoicePanel({ voice, onClose }) {
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label htmlFor="voice-language" className="text-xs font-medium text-slate-600">
-                Voice language
+                {t('voice.language')}
               </label>
               <select
                 id="voice-language"
@@ -71,17 +73,17 @@ export default function VoicePanel({ voice, onClose }) {
                 listening ? 'bg-rose-600 hover:bg-rose-700 focus-visible:ring-rose-200' : 'bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-200'
               }`}
             >
-              {listening ? <FiSquare aria-hidden="true" /> : <FiMic aria-hidden="true" />} {START_LABELS[voice.status]}
+              {listening ? <FiSquare aria-hidden="true" /> : <FiMic aria-hidden="true" />} {t(START_LABELS[voice.status])}
             </button>
           </div>
 
           <div role="status" aria-live="polite" className="mt-3 min-h-5 text-sm text-slate-700">
-            {STATUS_TEXT[voice.status] ?? voice.notice}
+            {STATUS_TEXT[voice.status] ? t(STATUS_TEXT[voice.status]) : voice.notice}
           </div>
 
           {voice.interim ? (
             <p className="mt-1 rounded-xl bg-white px-3 py-2 text-sm italic text-slate-600" data-testid="voice-interim">
-              Hearing: {voice.interim}
+              {t('voice.hearing', { text: voice.interim })}
             </p>
           ) : null}
 
@@ -93,10 +95,7 @@ export default function VoicePanel({ voice, onClose }) {
         </>
       )}
 
-      <p className="mt-3 text-xs leading-5 text-slate-600">
-        Voice input uses your browser&apos;s speech recognition. In Chrome and Edge your audio is sent to the browser maker&apos;s online speech service to be turned into text.
-        HIMI never receives or stores your audio. Only the text you review and send is shared with HIMI. Nothing is sent until you press Send.
-      </p>
+      <p className="mt-3 text-xs leading-5 text-slate-600">{t('voice.privacy', { action: submitLabel ?? t('voice.send') })}</p>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { FiPlay, FiRepeat, FiSquare } from 'react-icons/fi';
+import { useT } from '../../i18n/I18nContext';
 import { useSpeechOutput } from '../../hooks/useSpeechOutput';
+import { useVoiceAvailability } from '../../hooks/useVoiceAvailability';
+import { detectSpeechLang } from '../../utils/speechText';
 import { getSpeechOutput } from '../../utils/speechOutput';
 
 /**
@@ -8,7 +11,10 @@ import { getSpeechOutput } from '../../utils/speechOutput';
  * synthesis, where the reply simply stays text. Audio is produced by the browser; nothing is sent to HIMI.
  */
 export default function ListenButton({ messageId, text }) {
+  const { t } = useT();
   const { supported, speakingId, lastId, errorId, error, speak, stop } = useSpeechOutput();
+  const lang = detectSpeechLang(text);
+  const teluguVoice = useVoiceAvailability('te-IN');
   const speaking = speakingId === messageId;
   const played = lastId === messageId;
 
@@ -29,8 +35,9 @@ export default function ListenButton({ messageId, text }) {
   }
 
   const Icon = speaking ? FiSquare : played ? FiRepeat : FiPlay;
-  const label = speaking ? 'Stop' : played ? 'Replay' : 'Listen';
-  const description = speaking ? 'Stop reading this reply' : played ? 'Replay this reply aloud' : 'Read this reply aloud';
+  const label = speaking ? t('voice.stop') : played ? t('voice.replay') : t('voice.listen');
+  const description = speaking ? t('voice.stopLabel') : played ? t('voice.replayLabel') : t('voice.listenLabel');
+  const voiceMissing = lang === 'te-IN' && teluguVoice === 'missing' && (speaking || played);
 
   return (
     <>
@@ -45,6 +52,11 @@ export default function ListenButton({ messageId, text }) {
       >
         <Icon aria-hidden="true" /> {label}
       </button>
+      {voiceMissing ? (
+        <span role="status" className="text-xs text-amber-700">
+          {t('voice.noTeluguVoice')}
+        </span>
+      ) : null}
       {errorId === messageId && error ? (
         <span role="status" className="text-xs text-rose-600">
           {error}

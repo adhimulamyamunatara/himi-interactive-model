@@ -143,3 +143,33 @@ describe('createSpeechOutput', () => {
     assert.equal(calls, seen);
   });
 });
+
+describe('voice selection', () => {
+  it('uses an installed Telugu voice for Telugu text and sets the language', () => {
+    const { synth, spoken, output } = createFakeEngine();
+    const telugu = { name: 'Geeta', lang: 'te-IN' };
+    synth.getVoices = () => [{ name: 'Rishi', lang: 'en-IN' }, telugu];
+    output.speak('m1', 'ఇది ఒక ప్రాసెస్.');
+    assert.equal(spoken[0].lang, 'te-IN');
+    assert.equal(spoken[0].voice, telugu);
+  });
+
+  it('leaves the device default in place when no matching voice is installed', () => {
+    const { synth, spoken, output } = createFakeEngine();
+    synth.getVoices = () => [{ name: 'Alex', lang: 'en-US' }];
+    output.speak('m1', 'ఇది ఒక ప్రాసెస్.');
+    assert.equal(spoken[0].lang, 'te-IN');
+    assert.equal(spoken[0].voice, undefined);
+  });
+
+  it('still speaks when getVoices is missing or throws', () => {
+    const missing = createFakeEngine();
+    assert.equal(missing.output.speak('m1', 'Hello there.'), true);
+    const throwing = createFakeEngine();
+    throwing.synth.getVoices = () => {
+      throw new Error('no voices');
+    };
+    assert.equal(throwing.output.speak('m1', 'Hello there.'), true);
+    assert.equal(throwing.spoken.length, 1);
+  });
+});
