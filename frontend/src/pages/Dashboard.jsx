@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiMessageCircle, FiShuffle, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiMessageCircle, FiPlus, FiShuffle, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -14,7 +14,8 @@ import StatCard from '../components/dashboard/StatCard';
 import { useChat } from '../context/ChatContext';
 import { useUser } from '../context/UserContext';
 import { formatGreeting, formatLongDate, formatRelativeTime, getDailyQuote } from '../utils/formatters';
-import { calculateStreak, getRecentQuestions, getSubjectActivity } from '../utils/messageModel';
+import { getRecentConversations } from '../utils/chatConversations';
+import { calculateStreak, getSubjectActivity } from '../utils/messageModel';
 import { SUBJECTS } from '../utils/subjects';
 
 const UPCOMING = [
@@ -36,26 +37,38 @@ const item = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { messages, selectedSubject, setSelectedSubject } = useChat();
+  const {
+    conversations,
+    activeConversation,
+    allMessages: messages,
+    selectedSubject,
+    createConversation,
+    selectConversation
+  } = useChat();
 
   const quote = useMemo(() => getDailyQuote(), []);
   const stats = useMemo(() => {
     const activity = getSubjectActivity(messages);
-    const questions = getRecentQuestions(messages, 3);
 
     return {
       activity,
-      recentQuestions: questions,
       totalQuestions: messages.filter((message) => message.role === 'user').length,
       streak: calculateStreak(messages),
       progress: (activity.length / SUBJECTS.length) * 100
     };
   }, [messages]);
 
+  const recentConversations = useMemo(() => getRecentConversations({ conversations }, 3), [conversations]);
   const hasActivity = messages.length > 0;
 
+  // Starting from a subject opens a fresh chat, so an existing conversation's subject is never changed.
   const openSubject = (subject) => {
-    setSelectedSubject(subject);
+    createConversation(subject);
+    navigate('/chat');
+  };
+
+  const startNewChat = () => {
+    createConversation();
     navigate('/chat');
   };
 
@@ -169,8 +182,14 @@ export default function Dashboard() {
               <QuickAction
                 icon={FiMessageCircle}
                 label="Resume learning"
-                description={`Continue with ${selectedSubject}`}
+                description={activeConversation ? `Continue "${activeConversation.title}"` : `Continue with ${selectedSubject}`}
                 to="/chat"
+              />
+              <QuickAction
+                icon={FiPlus}
+                label="New chat"
+                description="Start a separate conversation on any topic"
+                onClick={startNewChat}
               />
               <QuickAction
                 icon={FiCheckSquare}
@@ -234,25 +253,26 @@ export default function Dashboard() {
 
           <Card>
             <p className="eyebrow">Recent conversations</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">Latest questions</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Pick up a chat</h2>
             <div className="mt-5">
-              {stats.recentQuestions.length === 0 ? (
+              {recentConversations.length === 0 ? (
                 <EmptyState
                   compact
                   icon={FiMessageCircle}
                   title="No conversations yet"
-                  description="Your most recent questions will be listed here for quick access."
+                  description="Your most recently active chats will be listed here for quick access."
                   actionLabel="Ask a question"
                   actionTo="/chat"
                 />
               ) : (
                 <div className="space-y-3">
-                  {stats.recentQuestions.map((message) => (
+                  {recentConversations.map((conversation) => (
                     <ChatPreview
-                      key={message.id}
-                      title={message.content}
-                      subject={message.subject}
-                      time={formatRelativeTime(message.timestamp)}
+                      key={conversation.id}
+                      title={conversation.title}
+                      subject={conversation.subject}
+                      time={formatRelativeTime(conversation.updatedAt)}
+                      onClick={() => selectConversation(conversation.id)}
                     />
                   ))}
                 </div>

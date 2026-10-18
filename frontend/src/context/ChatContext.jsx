@@ -1,145 +1,118 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { sendChatMessage } from '../services/chatService';
-import { createMessage, sanitizeMessages } from '../utils/messageModel';
-import { DEFAULT_SUBJECT, SUBJECTS } from '../utils/subjects';
+import {
+  MAX_CONVERSATIONS,
+  getActiveConversation,
+  getActiveMessages,
+  getAllMessages,
+  getSelectedSubject
+} from '../utils/chatConversations';
+import { CHAT_ERROR_MESSAGE, createChatStore } from '../utils/chatStore';
 import { useToast } from './ToastContext';
 import { useUser } from './UserContext';
 
-const CHAT_STORAGE_KEY = 'himi.chat.state';
-export const CHAT_ERROR_MESSAGE = "I couldn't process that request. Please try again.";
+export { CHAT_ERROR_MESSAGE };
 
 const ChatContext = createContext(null);
 
-function createInitialChatState() {
-  return { selectedSubject: DEFAULT_SUBJECT, messages: [] };
-}
-
-function readInitialChatState() {
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(CHAT_STORAGE_KEY));
-
-    if (!stored) {
-      return createInitialChatState();
-    }
-
-    return {
-      selectedSubject: SUBJECTS.includes(stored.selectedSubject) ? stored.selectedSubject : DEFAULT_SUBJECT,
-      messages: sanitizeMessages(stored.messages)
-    };
-  } catch {
-    window.localStorage.removeItem(CHAT_STORAGE_KEY);
-    return createInitialChatState();
-  }
-}
-
+/**
+ * React binding for the chat store (`utils/chatStore.js`), which holds all conversation logic.
+ *
+ * Conversations are saved in this browser only (localStorage); nothing is synced to a server or other devices.
+ *
+ * Backwards compatible fields: `messages` (the open conversation's messages), `selectedSubject`,
+ * `setSelectedSubject`, `sendMessage`, `retryMessage`, `loading`. `clearConversation` was replaced by the
+ * explicit `clearActiveConversation` and `clearAllConversations` (used when signing out).
+ */
 export function ChatProvider({ children }) {
   const { user } = useUser();
   const toast = useToast();
-  const [state, setState] = useState(readInitialChatState);
-  const [loading, setLoading] = useState(false);
-  const inFlightRef = useRef(false);
+  const [store] = useState(() => createChatStore({ sendChat: sendChatMessage }));
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const { state, pendingIds, loadIssue } = snapshot;
   const userName = user?.name ?? 'Student';
 
   useEffect(() => {
-    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    store.setUserName(userName);
+  }, [store, userName]);
 
-  const appendMessage = useCallback((message) => {
-    setState((current) => ({ ...current, messages: [...current.messages, message] }));
-  }, []);
-
-  /**
-   * Ask the backend for a reply. Any failure (network, HTTP or a non-success payload status)
-   * becomes a friendly error message in the conversation plus a toast.
-   */
-  const requestReply = useCallback(
-    async (content, subject) => {
-      inFlightRef.current = true;
-      setLoading(true);
-
-      try {
-        const data = await sendChatMessage({ message: content, subject, userName });
-
-        if (data?.status !== 'success' || !data.response) {
-          throw new Error('The AI service did not return a successful response.');
-        }
-
-        appendMessage(createMessage({ role: 'assistant', content: data.response, subject }));
-      } catch {
-        appendMessage(createMessage({ role: 'assistant', content: CHAT_ERROR_MESSAGE, subject, error: true }));
-        toast.error('Message failed', 'HIMI could not get a reply right now. You can retry the message.');
-      } finally {
-        inFlightRef.current = false;
-        setLoading(false);
+  useEffect(() => {
+    store.setNotifier((notice) => {
+      if (notice.type === 'reply-failed') {
+        toast.error(
+          'Message failed',
+          notice.active
+            ? 'HIMI could not get a reply right now. You can retry the message.'
+            : `HIMI could not reply in "${notice.title}". Open it to retry the message.`
+        );
+      } else if (notice.type === 'limit-reached') {
+        toast.error('Too many chats', `You can keep up to ${MAX_CONVERSATIONS} chats. Delete one to start another.`);
+      } else if (notice.type === 'storage-failed') {
+        toast.error('Chats not saved', 'Your browser would not store chat history, so it may be lost on refresh.');
       }
-    },
-    [appendMessage, toast, userName]
-  );
+    });
 
-  const sendMessage = useCallback(
-    async (content) => {
-      const trimmed = content.trim();
+    return () => store.setNotifier(null);
+  }, [store, toast]);
 
-      if (!trimmed || inFlightRef.current) {
-        return false;
-      }
+  const activeConversation = getActiveConversation(state);
+  const activeConversationId = activeConversation?.id ?? null;
+  const messages = getActiveMessages(state);
+  const selectedSubject = getSelectedSubject(state);
+  const loading = activeConversationId !== null && pendingIds.includes(activeConversationId);
+  const allMessages = useMemo(() => getAllMessages(state), [state]);
 
-      const subject = state.selectedSubject;
-      appendMessage(createMessage({ role: 'user', content: trimmed, subject }));
-      await requestReply(trimmed, subject);
-      return true;
-    },
-    [appendMessage, requestReply, state.selectedSubject]
-  );
-
-  /** Re-send the question that preceded a failed assistant message. */
   const retryMessage = useCallback(
-    async (errorMessageId) => {
-      if (inFlightRef.current) {
-        return;
-      }
-
-      const errorIndex = state.messages.findIndex((message) => message.id === errorMessageId);
-      const question = state.messages
-        .slice(0, Math.max(errorIndex, 0))
-        .reverse()
-        .find((message) => message.role === 'user');
-
-      if (!question) {
-        return;
-      }
-
-      setState((current) => ({
-        ...current,
-        messages: current.messages.filter((message) => message.id !== errorMessageId)
-      }));
-      await requestReply(question.content, question.subject);
+    (errorMessageId) => {
+      const { activeConversationId: openId } = store.getSnapshot().state;
+      return openId ? store.retryMessage(openId, errorMessageId) : Promise.resolve(false);
     },
-    [requestReply, state.messages]
+    [store]
   );
 
-  const setSelectedSubject = useCallback((subject) => {
-    if (SUBJECTS.includes(subject)) {
-      setState((current) => ({ ...current, selectedSubject: subject }));
-    }
-  }, []);
-
-  const clearConversation = useCallback(() => {
-    setState(createInitialChatState());
-    window.localStorage.removeItem(CHAT_STORAGE_KEY);
-  }, []);
+  const clearActiveConversation = useCallback(() => {
+    const { activeConversationId: openId } = store.getSnapshot().state;
+    return openId ? store.clearConversation(openId) : false;
+  }, [store]);
 
   const value = useMemo(
     () => ({
-      messages: state.messages,
-      selectedSubject: state.selectedSubject,
+      conversations: state.conversations,
+      activeConversationId,
+      activeConversation,
+      pendingConversationIds: pendingIds,
+      messages,
+      allMessages,
+      selectedSubject,
       loading,
-      sendMessage,
+      loadIssue,
+      maxConversations: MAX_CONVERSATIONS,
+      sendMessage: store.sendMessage,
       retryMessage,
-      setSelectedSubject,
-      clearConversation
+      setSelectedSubject: store.setSubject,
+      /** Start a blank chat; the conversation is created when its first message is sent. */
+      createConversation: store.startNewConversation,
+      selectConversation: store.selectConversation,
+      renameConversation: store.renameConversation,
+      deleteConversation: store.deleteConversation,
+      clearActiveConversation,
+      clearAllConversations: store.clearAll,
+      dismissLoadIssue: store.dismissLoadIssue
     }),
-    [clearConversation, loading, retryMessage, sendMessage, setSelectedSubject, state.messages, state.selectedSubject]
+    [
+      activeConversation,
+      activeConversationId,
+      allMessages,
+      clearActiveConversation,
+      loadIssue,
+      loading,
+      messages,
+      pendingIds,
+      retryMessage,
+      selectedSubject,
+      state.conversations,
+      store
+    ]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

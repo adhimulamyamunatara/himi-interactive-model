@@ -30,7 +30,7 @@ const mobileLinkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const { user, logout } = useUser();
-  const { clearConversation } = useChat();
+  const { clearAllConversations } = useChat();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,7 +44,7 @@ export default function Navbar() {
   useEscapeKey(closeMenu, menuOpen);
 
   const handleLogout = () => {
-    clearConversation();
+    clearAllConversations();
     logout();
     closeMenu();
     toast.success('Signed out', 'Your local session and chat history were cleared.');

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { FiClock, FiMessageCircle, FiZap } from 'react-icons/fi';
+import { FiClock, FiMessageCircle, FiPlus, FiZap } from 'react-icons/fi';
 import AssistantAvatar from '../components/avatar/AssistantAvatar';
 import ChatComposer from '../components/chat/ChatComposer';
 import ChatMessage from '../components/chat/ChatMessage';
@@ -29,28 +29,51 @@ function StatRow({ label, value }) {
 export default function Chat() {
   const { user } = useUser();
   const toast = useToast();
-  const { messages, selectedSubject, loading, sendMessage, retryMessage, setSelectedSubject, clearConversation } =
-    useChat();
+  const {
+    conversations,
+    activeConversationId,
+    activeConversation,
+    pendingConversationIds,
+    messages,
+    allMessages,
+    selectedSubject,
+    loading,
+    loadIssue,
+    sendMessage,
+    retryMessage,
+    setSelectedSubject,
+    createConversation,
+    selectConversation,
+    renameConversation,
+    deleteConversation,
+    clearActiveConversation,
+    dismissLoadIssue
+  } = useChat();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
   const scrollRef = useRef(null);
   const isFirstScrollRef = useRef(true);
+  const lastConversationRef = useRef(activeConversationId);
 
+  // Learning stats cover everything the student has asked, across all conversations.
   const stats = useMemo(() => {
-    const questions = messages.filter((message) => message.role === 'user');
-    const activity = getSubjectActivity(messages);
+    const activity = getSubjectActivity(allMessages);
 
     return {
-      questions: questions.length,
-      replies: messages.filter((message) => message.role === 'assistant' && !message.error).length,
+      questions: allMessages.filter((message) => message.role === 'user').length,
+      replies: allMessages.filter((message) => message.role === 'assistant' && !message.error).length,
       subjectsExplored: activity.length,
       subjectQuestions: activity.find((item) => item.subject === selectedSubject)?.count ?? 0,
-      streak: calculateStreak(messages)
+      streak: calculateStreak(allMessages)
     };
-  }, [messages, selectedSubject]);
+  }, [allMessages, selectedSubject]);
+
+  const deleteTarget = conversations.find((conversation) => conversation.id === deleteTargetId) ?? null;
 
   // Keep the conversation in view. A finished assistant reply scrolls to its *start* so long answers
   // are read from the top; everything else (your message, the typing indicator) scrolls to the bottom.
+  // Opening a different conversation always jumps (without animation) to its latest message.
   useEffect(() => {
     const container = scrollRef.current;
 
@@ -58,12 +81,17 @@ export default function Chat() {
       return;
     }
 
-    const behavior = isFirstScrollRef.current ? 'auto' : 'smooth';
+    const switched = lastConversationRef.current !== activeConversationId;
+    lastConversationRef.current = activeConversationId;
+
+    const behavior = isFirstScrollRef.current || switched ? 'auto' : 'smooth';
     isFirstScrollRef.current = false;
 
     const lastMessage = messages[messages.length - 1];
     const replyElement =
-      !loading && lastMessage?.role === 'assistant' ? document.getElementById(`message-${lastMessage.id}`) : null;
+      !switched && !loading && lastMessage?.role === 'assistant'
+        ? document.getElementById(`message-${lastMessage.id}`)
+        : null;
 
     if (replyElement) {
       const offset =
@@ -73,12 +101,29 @@ export default function Chat() {
     }
 
     container.scrollTo({ top: container.scrollHeight, behavior });
-  }, [messages, loading]);
+  }, [messages, loading, activeConversationId]);
 
-  const jumpToMessage = useCallback((messageId) => {
+  const handleNewChat = useCallback(() => {
     setHistoryOpen(false);
-    document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, []);
+    createConversation();
+  }, [createConversation]);
+
+  const handleSelect = useCallback(
+    (id) => {
+      setHistoryOpen(false);
+      selectConversation(id);
+    },
+    [selectConversation]
+  );
+
+  const handleRename = useCallback(
+    (id, title) => {
+      if (renameConversation(id, title)) {
+        toast.success('Chat renamed', 'Your new title is saved in this browser.');
+      }
+    },
+    [renameConversation, toast]
+  );
 
   const requestClear = useCallback(() => {
     setHistoryOpen(false);
@@ -86,9 +131,21 @@ export default function Chat() {
   }, []);
 
   const confirmClear = () => {
-    clearConversation();
+    clearActiveConversation();
     setConfirmOpen(false);
-    toast.success('Conversation cleared', 'Your local chat history has been deleted.');
+    toast.success('Chat cleared', 'The messages in this chat were deleted. Your other chats are untouched.');
+  };
+
+  const requestDelete = useCallback((id) => {
+    setHistoryOpen(false);
+    setDeleteTargetId(id);
+  }, []);
+
+  const confirmDelete = () => {
+    const title = deleteTarget?.title;
+    deleteConversation(deleteTargetId);
+    setDeleteTargetId(null);
+    toast.success('Chat deleted', title ? `"${title}" was removed. Your other chats are untouched.` : undefined);
   };
 
   const handleVoice = () => {
@@ -97,11 +154,27 @@ export default function Chat() {
 
   const firstName = user?.name?.split(' ')[0] ?? 'there';
 
+  const sidebar = (
+    <ChatSidebar
+      conversations={conversations}
+      activeConversationId={activeConversationId}
+      pendingConversationIds={pendingConversationIds}
+      loadIssue={loadIssue}
+      canClearActive={messages.length > 0}
+      onNewChat={handleNewChat}
+      onSelect={handleSelect}
+      onRename={handleRename}
+      onDelete={requestDelete}
+      onClearActive={requestClear}
+      onDismissIssue={dismissLoadIssue}
+    />
+  );
+
   return (
     <section className="section-shell py-4 lg:py-6">
       <div className="grid h-[calc(100dvh-7rem)] min-h-[560px] gap-6 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
         <Card className="hidden min-h-0 p-5 xl:block">
-          <ChatSidebar messages={messages} onSelect={jumpToMessage} onClear={requestClear} />
+          {sidebar}
         </Card>
 
         <Card className="flex min-h-0 flex-col overflow-hidden p-0">
@@ -111,13 +184,23 @@ export default function Chat() {
                 type="button"
                 onClick={() => setHistoryOpen(true)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 xl:hidden"
-                aria-label="Open recent chats"
+                aria-label="Open your chats"
               >
                 <FiClock aria-hidden="true" />
               </button>
+              <button
+                type="button"
+                onClick={handleNewChat}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 xl:hidden"
+                aria-label="New chat"
+              >
+                <FiPlus aria-hidden="true" />
+              </button>
               <div className="min-w-0">
                 <p className="eyebrow">Learning chat</p>
-                <h1 className="truncate text-xl font-bold text-slate-950 sm:text-2xl">{selectedSubject}</h1>
+                <h1 className="truncate text-xl font-bold text-slate-950 sm:text-2xl" title={activeConversation?.title}>
+                  {activeConversation?.title ?? 'New chat'}
+                </h1>
               </div>
             </div>
             <Select
@@ -235,17 +318,26 @@ export default function Chat() {
         </aside>
       </div>
 
-      <Drawer open={historyOpen} onClose={() => setHistoryOpen(false)} title="Recent chats">
-        <ChatSidebar messages={messages} onSelect={jumpToMessage} onClear={requestClear} />
+      <Drawer open={historyOpen} onClose={() => setHistoryOpen(false)} title="Your chats">
+        {sidebar}
       </Drawer>
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Clear this conversation?"
-        description="All messages in your local chat history will be permanently deleted. This cannot be undone."
-        confirmLabel="Clear conversation"
+        title="Clear this chat?"
+        description="All messages in this chat will be permanently deleted from this browser. The chat and its title stay, and your other chats are not affected."
+        confirmLabel="Clear this chat"
         onConfirm={confirmClear}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={deleteTarget ? `Delete "${deleteTarget.title}"?` : 'Delete this chat?'}
+        description="This chat and all of its messages will be permanently deleted from this browser. Your other chats are not affected. This cannot be undone."
+        confirmLabel="Delete chat"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
       />
     </section>
   );
