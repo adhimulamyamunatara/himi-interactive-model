@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiMessageCircle, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiFileText, FiMessageCircle, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -202,6 +202,12 @@ export default function Dashboard() {
                 label="Study Planner"
                 description="Get a day-by-day plan for your exam"
                 to="/study-planner"
+              />
+              <QuickAction
+                icon={FiFileText}
+                label="Summarise PDF notes"
+                description="Upload a PDF and get key concepts and revision questions"
+                to="/notes"
               />
               <QuickAction
                 icon={FiSliders}

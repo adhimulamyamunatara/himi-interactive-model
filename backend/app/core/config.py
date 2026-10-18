@@ -30,6 +30,10 @@ class Settings:
     gemini_planner_model: str = field(
         default_factory=lambda: os.getenv("GEMINI_PLANNER_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     )
+    # Optional: a faster model for notes summaries. Falls back to GEMINI_MODEL when unset.
+    gemini_notes_model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_NOTES_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    )
 
  
 settings = Settings()
