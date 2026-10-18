@@ -151,6 +151,17 @@ test('actionRoute maps each kind to an existing page and encodes parameters', ()
   assert.equal(actionRoute('diagram', { topic: 'TCP' }), '/diagrams?topic=TCP');
 });
 
+test('parseTutorResponse accepts code and diagram handoffs', () => {
+  for (const [intent, kind] of [['code_help', 'code'], ['visual', 'diagram']]) {
+    const result = parseTutorResponse({ requestId: 'r', outcome: 'handoff', intent, agent: 'orchestrator', language: 'en', handoff: { kind, subject: 'Algorithms', topic: 'bubble sort' } });
+    assert.equal(result.handoff.kind, kind);
+  }
+});
+
+test('actionRoute opens the code assistant without carrying any code', () => {
+  assert.equal(actionRoute('code', { subject: 'Python', topic: 'secret code' }), '/code');
+});
+
 test('actionRoute returns null for unknown kinds (no open redirects)', () => {
   assert.equal(actionRoute('https://evil.example'), null);
   assert.equal(actionRoute(undefined), null);

@@ -10,7 +10,8 @@ export const MAX_HISTORY_TURNS = 6;
 export const MAX_HISTORY_CHARS = 1500;
 export const MAX_ANSWER_CHARS = 6000;
 
-const INTENTS = ['explain', 'hint', 'worked_example', 'revision', 'quiz', 'planner', 'clarify'];
+const INTENTS = ['explain', 'hint', 'worked_example', 'revision', 'quiz', 'planner', 'code_help', 'visual', 'clarify'];
+const HANDOFF_KINDS = ['quiz', 'planner', 'code', 'diagram'];
 const OUTCOMES = ['answer', 'clarify', 'handoff'];
 const STEP_KINDS = ['learn', 'example', 'practice', 'check'];
 const ACTION_KINDS = ['quiz', 'planner', 'notes', 'whiteboard', 'diagram'];
@@ -159,7 +160,7 @@ export function parseTutorResponse(data) {
   if (data.outcome === 'handoff') {
     const handoff = data.handoff;
 
-    if (!isObject(handoff) || !['quiz', 'planner'].includes(handoff.kind)) {
+    if (!isObject(handoff) || !HANDOFF_KINDS.includes(handoff.kind)) {
       throw new InvalidTutorResponseError('Invalid handoff.');
     }
 
@@ -215,6 +216,8 @@ export function actionRoute(kind, { subject, topic } = {}) {
       return '/whiteboard';
     case 'diagram':
       return `/diagrams${query({ subject, topic })}`;
+    case 'code':
+      return '/code';
     default:
       return null;
   }

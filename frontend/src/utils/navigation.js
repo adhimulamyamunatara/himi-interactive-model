@@ -14,6 +14,8 @@ export const MEMBER_PAGES = [
   { to: '/notes', label: 'Notes', labelKey: 'nav.notes', primary: true },
   { to: '/progress', label: 'Progress', labelKey: 'nav.progress', primary: true },
   { to: '/whiteboard', label: 'Whiteboard', labelKey: 'nav.whiteboard', primary: false },
+  { to: '/code', label: 'Code', labelKey: 'nav.code', footerLabel: 'Code Assistant', footerKey: 'nav.codeFull', primary: false },
+  { to: '/diagrams', label: 'Diagrams', labelKey: 'nav.diagrams', primary: false },
   { to: '/learning-memory', label: 'Memory', labelKey: 'nav.memory', footerLabel: 'Learning Memory', footerKey: 'nav.memoryFull', primary: false },
   { to: '/profile', label: 'Profile', labelKey: 'nav.profile', primary: false }
 ];
