@@ -21,6 +21,7 @@ class Settings:
         default_factory=lambda: _split_origins(os.getenv("ALLOWED_ORIGINS", "http://localhost:5173"))
     )
     gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
+    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
 
  
 settings = Settings()
