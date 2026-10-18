@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from '../common/BrandLogo';
-import { MEMBER_PAGES } from '../../utils/navigation';
+import { useT } from '../../i18n/I18nContext';
+import { MEMBER_PAGES, PUBLIC_PAGES, pageLabel } from '../../utils/navigation';
 
-const PRODUCT_LINKS = [
-  { to: '/', label: 'Home' },
-  ...MEMBER_PAGES.map((page) => ({ to: page.to, label: page.footerLabel ?? page.label }))
-];
+const PRODUCT_LINKS = [...PUBLIC_PAGES, ...MEMBER_PAGES];
 
 const STACK = ['React 19 + Vite', 'Tailwind CSS', 'Framer Motion', 'FastAPI', 'Gemini API'];
 
 export default function Footer() {
+  const { t } = useT();
+
   return (
     <footer className="mt-10 border-t border-slate-200/80 bg-white/70">
       <div className="section-shell grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -27,7 +27,7 @@ export default function Footer() {
             {PRODUCT_LINKS.map((link) => (
               <li key={link.to}>
                 <Link to={link.to} className="transition hover:text-blue-600">
-                  {link.label}
+                  {pageLabel(link, t, { footer: true })}
                 </Link>
               </li>
             ))}

@@ -6,10 +6,12 @@ import { useChat } from '../../context/ChatContext';
 import { useToast } from '../../context/ToastContext';
 import { useUser } from '../../context/UserContext';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useT } from '../../i18n/I18nContext';
 import UserAvatar from '../common/UserAvatar';
-import { MEMBER_PAGES, PUBLIC_PAGES } from '../../utils/navigation';
+import { MEMBER_PAGES, PUBLIC_PAGES, pageLabel } from '../../utils/navigation';
 import BrandLogo from '../common/BrandLogo';
 import Button from '../common/Button';
+import LanguageSelect from '../common/LanguageSelect';
 
 const PRIMARY_LINKS = MEMBER_PAGES.filter((page) => page.primary);
 const MORE_LINKS = MEMBER_PAGES.filter((page) => !page.primary);
@@ -26,6 +28,7 @@ const mobileLinkClass = ({ isActive }) =>
 
 /** "More" dropdown for the pages that do not fit in the bar. Closes on Escape, outside click and navigation. */
 function MoreMenu({ links }) {
+  const { t } = useT();
   const location = useLocation();
   const [openPath, setOpenPath] = useState(null);
   const containerRef = useRef(null);
@@ -61,7 +64,7 @@ function MoreMenu({ links }) {
           isActive ? 'bg-brand-gradient text-white shadow-glow-soft' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
         }`}
       >
-        More <FiChevronDown className={`transition ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+        {t('nav.more')} <FiChevronDown className={`transition ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? (
         <ul
@@ -71,7 +74,7 @@ function MoreMenu({ links }) {
           {links.map((link) => (
             <li key={link.to}>
               <NavLink to={link.to} className={mobileLinkClass}>
-                {link.footerLabel ?? link.label}
+                {pageLabel(link, t, { footer: true })}
               </NavLink>
             </li>
           ))}
@@ -82,6 +85,7 @@ function MoreMenu({ links }) {
 }
 
 export default function Navbar() {
+  const { t } = useT();
   const { user, logout } = useUser();
   const { clearAllConversations } = useChat();
   const toast = useToast();
@@ -114,13 +118,14 @@ export default function Navbar() {
         <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-sm xl:flex" aria-label="Main">
           {(user ? PRIMARY_LINKS : PUBLIC_PAGES).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'} className={desktopLinkClass}>
-              {item.label}
+              {pageLabel(item, t)}
             </NavLink>
           ))}
           {user ? <MoreMenu links={MORE_LINKS} /> : null}
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageSelect className="hidden sm:inline-flex" />
           {user ? (
             <>
               <Link
@@ -130,20 +135,20 @@ export default function Navbar() {
                 <UserAvatar size="sm" className="!h-8 !w-8 !rounded-xl !text-xs" />
                 <div className="text-left">
                   <p className="max-w-[9rem] truncate text-sm font-semibold leading-tight text-slate-900">{user.name}</p>
-                  <p className="text-xs text-slate-500">Student</p>
+                  <p className="text-xs text-slate-500">{t('common.student')}</p>
                 </div>
               </Link>
               <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={handleLogout}>
-                <FiLogOut aria-hidden="true" /> Logout
+                <FiLogOut aria-hidden="true" /> {t('nav.logout')}
               </Button>
             </>
           ) : (
             <>
               <Button variant="secondary" size="sm" className="hidden sm:inline-flex" to="/login">
-                Login
+                {t('nav.login')}
               </Button>
               <Button size="sm" to="/login">
-                Start Learning <FiArrowRight aria-hidden="true" />
+                {t('nav.startLearning')} <FiArrowRight aria-hidden="true" />
               </Button>
             </>
           )}
@@ -151,7 +156,7 @@ export default function Navbar() {
             type="button"
             onClick={() => setMenuPath(menuOpen ? null : location.pathname)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 xl:hidden"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
           >
@@ -172,9 +177,10 @@ export default function Navbar() {
             className="overflow-hidden border-t border-slate-200/70 bg-white/95 xl:hidden"
           >
             <div className="section-shell flex flex-col gap-1 py-4">
+              <LanguageSelect className="mb-2 self-start sm:hidden" />
               {mobileLinks.map((item) => (
                 <NavLink key={item.to} to={item.to} end={item.to === '/'} className={mobileLinkClass}>
-                  {item.footerLabel ?? item.label}
+                  {pageLabel(item, t, { footer: true })}
                 </NavLink>
               ))}
               {user ? (
@@ -183,11 +189,11 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="mt-2 flex items-center gap-2 rounded-2xl px-4 py-3 text-left text-base font-medium text-rose-600 transition hover:bg-rose-50"
                 >
-                  <FiLogOut aria-hidden="true" /> Logout
+                  <FiLogOut aria-hidden="true" /> {t('nav.logout')}
                 </button>
               ) : (
                 <NavLink to="/login" className={mobileLinkClass}>
-                  Login
+                  {t('nav.login')}
                 </NavLink>
               )}
             </div>

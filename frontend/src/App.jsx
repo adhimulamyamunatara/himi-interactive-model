@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Profile = lazy(() => import('./pages/Profile'));
 const LearningMemory = lazy(() => import('./pages/LearningMemory'));
+const Mentor = lazy(() => import('./pages/Mentor'));
 const Notes = lazy(() => import('./pages/Notes'));
 const Progress = lazy(() => import('./pages/Progress'));
 const Quiz = lazy(() => import('./pages/Quiz'));
@@ -61,6 +62,7 @@ export default function App() {
                   <Route path="/study-planner" element={<ProtectedRoute><StudyPlanner /></ProtectedRoute>} />
                   <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
                   <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+                  <Route path="/mentor" element={<ProtectedRoute><Mentor /></ProtectedRoute>} />
                   <Route path="/whiteboard" element={<ProtectedRoute><Whiteboard /></ProtectedRoute>} />
                   <Route path="/learning-memory" element={<ProtectedRoute><LearningMemory /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

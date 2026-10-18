@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiFileText, FiMessageCircle, FiPenTool, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiEdit3, FiFileText, FiCompass, FiMessageCircle, FiPenTool, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -191,6 +191,12 @@ export default function Dashboard() {
                 label="Resume learning"
                 description={activeConversation ? `Continue "${activeConversation.title}"` : `Continue with ${selectedSubject}`}
                 to="/chat"
+              />
+              <QuickAction
+                icon={FiCompass}
+                label="AI Mentor"
+                description="Get a teaching plan, an explanation and clear next steps"
+                to="/mentor"
               />
               <QuickAction
                 icon={FiPlus}
