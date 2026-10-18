@@ -77,9 +77,9 @@ const ROADMAP = [
   {
     phase: 'Phase 3',
     title: 'Human-like companion',
-    status: 'Future',
+    status: 'Partly live',
     tone: 'purple',
-    items: ['Camera and emotion awareness', 'Hands-free voice conversations', 'Animated mentor avatar', 'Multi-agent architecture']
+    items: ['Multi-agent mentor with code and diagram tools', 'Photo helper, voice and Telugu support', 'Campus assistant and solo study room', 'Not yet: emotion detection, shared classrooms']
   }
 ];
 

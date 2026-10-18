@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCamera, FiCheckSquare, FiEdit3, FiFileText, FiCode, FiCompass, FiGitBranch, FiMessageCircle, FiPenTool, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCamera, FiCheckSquare, FiEdit3, FiFileText, FiCode, FiCompass, FiGitBranch, FiLayout, FiMapPin, FiMessageCircle, FiPenTool, FiPlus, FiShuffle, FiSliders, FiTarget, FiZap } from 'react-icons/fi';
 import { LuFlame } from 'react-icons/lu';
 import Badge, { SubjectBadge } from '../components/common/Badge';
 import Button from '../components/common/Button';
@@ -22,7 +22,7 @@ import { SUBJECTS } from '../utils/subjects';
 const UPCOMING = [
   'Hands-free spoken conversations',
   'Animated mentor avatar',
-  'Camera and emotion awareness',
+  'Shared multi-user classrooms',
   'Accounts and sync across devices'
 ];
 
@@ -215,6 +215,18 @@ export default function Dashboard() {
                 label="Photo Helper"
                 description="Photograph notes or a diagram and get it explained (only when you press send)"
                 to="/camera"
+              />
+              <QuickAction
+                icon={FiMapPin}
+                label="Campus Assistant"
+                description="Ask about your college using documents you add (answers cite them)"
+                to="/campus"
+              />
+              <QuickAction
+                icon={FiLayout}
+                label="Study Room"
+                description="A solo session with an agenda, notes, tutor Q&A and a summary"
+                to="/classroom"
               />
               <QuickAction
                 icon={FiPlus}
