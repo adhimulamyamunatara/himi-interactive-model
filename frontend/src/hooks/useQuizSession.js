@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getApiErrorMessage, isRequestCancelled } from '../services/apiClient';
 import { generateQuiz } from '../services/quizService';
+import { createId } from '../utils/chatConversations';
 import { calculateQuizResults, validateQuizConfig } from '../utils/quiz';
 
 const GENERATION_ERROR = "HIMI couldn't generate a quiz right now. Please try again.";
@@ -13,6 +14,7 @@ const INITIAL_SESSION = {
   phase: 'config',
   config: null,
   quiz: null,
+  quizId: null, // identifies this one quiz, so a finished attempt is recorded at most once
   answers: {},
   currentIndex: 0,
   error: null,
@@ -48,7 +50,7 @@ export function useQuizSession() {
 
     try {
       const quiz = await generateQuiz(config, { signal: controller.signal });
-      setSession({ ...INITIAL_SESSION, phase: 'quiz', config, quiz });
+      setSession({ ...INITIAL_SESSION, phase: 'quiz', config, quiz, quizId: createId() });
       return true;
     } catch (error) {
       if (!isRequestCancelled(error) && !controller.signal.aborted) {

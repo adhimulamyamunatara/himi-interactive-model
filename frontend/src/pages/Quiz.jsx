@@ -1,11 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link, useSearchParams } from 'react-router-dom';
 import QuizConfigForm from '../components/quiz/QuizConfigForm';
 import QuizGenerating from '../components/quiz/QuizGenerating';
 import QuizResults from '../components/quiz/QuizResults';
 import QuizSession from '../components/quiz/QuizSession';
 import { useChat } from '../context/ChatContext';
 import { useQuizSession } from '../hooks/useQuizSession';
+import { recordQuizAttempt } from '../utils/analyticsStorage';
+import { MAX_TOPIC_LENGTH, calculateQuizResults, createDefaultConfig } from '../utils/quiz';
+import { SUBJECTS } from '../utils/subjects';
 
 const PHASE_COPY = {
   config: { eyebrow: 'Quiz generator', title: 'Test what you know', subtitle: 'Generate a practice quiz for any subject in seconds.' },
@@ -18,7 +22,33 @@ const PHASE_COPY = {
 export default function Quiz() {
   const { selectedSubject } = useChat();
   const { session, generate, cancelGeneration, selectAnswer, goToQuestion, submit, reset } = useQuizSession();
-  const { phase, config, quiz, answers, currentIndex, results, error } = session;
+  const { phase, config, quiz, quizId, answers, currentIndex, results, error } = session;
+  const [searchParams] = useSearchParams();
+  // 'saved' | 'failed' | null: whether this attempt reached the progress page's history.
+  const [recordStatus, setRecordStatus] = useState(null);
+
+  // The progress page can link here with ?subject=...&topic=... to practise a weak topic.
+  const linkedSubject = searchParams.get('subject');
+  const linkedConfig = SUBJECTS.includes(linkedSubject)
+    ? { ...createDefaultConfig(linkedSubject), topic: (searchParams.get('topic') ?? '').slice(0, MAX_TOPIC_LENGTH) }
+    : null;
+
+  const handleSubmit = () => {
+    // Record the score once per quiz (the id makes a repeat harmless), then show the results.
+    const scored = calculateQuizResults(quiz.questions, answers);
+    const outcome = recordQuizAttempt({
+      id: quizId,
+      submittedAt: new Date().toISOString(),
+      subject: quiz.subject,
+      topic: quiz.topic,
+      difficulty: quiz.difficulty,
+      total: scored.total,
+      correct: scored.correct,
+      unanswered: scored.unanswered
+    });
+    setRecordStatus(outcome.recorded || outcome.reason === 'duplicate' ? 'saved' : 'failed');
+    submit();
+  };
 
   const headingRef = useRef(null);
   const isFirstRender = useRef(true);
@@ -58,7 +88,7 @@ export default function Quiz() {
       {phase === 'config' || phase === 'error' ? (
         <QuizConfigForm
           key={phase}
-          initialConfig={config}
+          initialConfig={config ?? linkedConfig}
           defaultSubject={selectedSubject}
           error={phase === 'error' ? error : null}
           onGenerate={generate}
@@ -75,12 +105,25 @@ export default function Quiz() {
           currentIndex={currentIndex}
           onSelectAnswer={selectAnswer}
           onGoTo={goToQuestion}
-          onSubmit={submit}
+          onSubmit={handleSubmit}
         />
       ) : null}
 
       {phase === 'results' ? (
-        <QuizResults quiz={quiz} results={results} onRetry={() => generate(config)} onNewQuiz={reset} />
+        <>
+          <QuizResults quiz={quiz} results={results} onRetry={() => generate(config)} onNewQuiz={reset} />
+          {recordStatus ? (
+            <p className="mt-6 text-center text-sm text-slate-600" role="status">
+              {recordStatus === 'saved' ? (
+                <>
+                  This score was added to your history. <Link to="/progress" className="font-semibold text-blue-700 underline">See your progress</Link>.
+                </>
+              ) : (
+                'This score could not be saved to your progress history because the browser refused to store it.'
+              )}
+            </p>
+          ) : null}
+        </>
       ) : null}
     </motion.section>
   );

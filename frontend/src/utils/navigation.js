@@ -8,6 +8,7 @@ export const MEMBER_PAGES = [
   { to: '/quiz', label: 'Quiz', primary: true },
   { to: '/study-planner', label: 'Planner', footerLabel: 'Study Planner', primary: true },
   { to: '/notes', label: 'Notes', primary: true },
+  { to: '/progress', label: 'Progress', primary: true },
   { to: '/learning-memory', label: 'Memory', footerLabel: 'Learning Memory', primary: false },
   { to: '/profile', label: 'Profile', primary: false }
 ];

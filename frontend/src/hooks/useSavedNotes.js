@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { createId } from '../utils/chatConversations';
 import {
   addSummaryRecord,
   canAddSummary,
@@ -9,8 +10,6 @@ import {
   saveSummaries
 } from '../utils/notesStorage';
 
-const newId = () =>
-  typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `n-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 /** Saved summaries (this browser only). Each action reports whether the browser accepted the write. */
 export function useSavedNotes() {
@@ -24,7 +23,7 @@ export function useSavedNotes() {
         return { ok: false, reason: 'full', id: null };
       }
 
-      const record = createSummaryRecord({ id: newId(), title, fileName, pageCount, notes });
+      const record = createSummaryRecord({ id: createId(), title, fileName, pageCount, notes });
 
       if (!record) {
         return { ok: false, reason: 'invalid', id: null };
