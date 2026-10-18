@@ -38,6 +38,11 @@ function AnswerEntry({ entry, isLatest, voiceEnabled, onAsk, onNavigate, busy })
   return (
     <Said>
       <div className={`${HIMI_BUBBLE} group`} lang={result.language}>
+        {entry.basic ? (
+          <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+            <FiAlertCircle aria-hidden="true" /> {t('companion.basicTag')}
+          </p>
+        ) : null}
         <MarkdownMessage content={entry.text} />
         <div className="mt-2 flex flex-wrap items-center gap-1">
           {voiceEnabled ? <ListenButton messageId={companionSpeechId(entry.id)} text={entry.text} alwaysVisible /> : null}

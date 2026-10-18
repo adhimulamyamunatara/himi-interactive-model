@@ -14,7 +14,7 @@ import { useSpeechOutput, useStopSpeechOnLeave } from './useSpeechOutput';
  * companion (the dock or the dashboard stage), never by both, so a reply is never read twice.
  */
 export function useCompanionSpeech() {
-  const { entries, epoch } = useCompanion();
+  const { entries, epoch, live } = useCompanion();
   const { preferences } = usePreferences();
   const replies = useMemo(
     () => entries.filter((entry) => entry.kind === 'answer').map((entry) => ({ id: companionSpeechId(entry.id), text: entry.text })),
@@ -22,7 +22,8 @@ export function useCompanionSpeech() {
   );
 
   useStopSpeechOnLeave(epoch);
-  useAutoRead({ ownerKey: epoch, replies, voiceEnabled: preferences.voiceEnabled, autoReadReplies: preferences.autoReadReplies });
+  // The full-screen live conversation reads replies itself; two readers would say everything twice.
+  useAutoRead({ ownerKey: epoch, replies, voiceEnabled: preferences.voiceEnabled, autoReadReplies: preferences.autoReadReplies && !live });
 }
 
 /**
@@ -37,16 +38,24 @@ export function useCompanionView() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const textareaRef = useAutoResizeTextarea(companion.draft, 144);
 
-  const { appendToDraft, focusNonce, setDraft, draft, send, status, explanationLanguage } = companion;
+  const { appendToDraft, focusNonce, setDraft, draft, send, status, explanationLanguage, live } = companion;
 
   const voice = useSpeechInput({ resetKey: companion.epoch, onTranscript: appendToDraft });
   const listening = voice.status === 'listening';
   const robotState = useRobotState({ listening });
   const speaking = typeof output.speakingId === 'string' && output.speakingId.startsWith(COMPANION_SPEECH_PREFIX);
   const voiceAllowed = preferences.voiceEnabled;
-  const showVoice = voiceAllowed && voiceOpen;
+  const showVoice = voiceAllowed && voiceOpen && !live;
   const thinking = status === 'thinking';
   const canSend = draft.trim().length > 0 && !thinking;
+
+  // The full-screen live view owns the microphone while it is open: this view's dictation is dropped.
+  const { cancel: cancelDictation } = voice;
+  useEffect(() => {
+    if (live) {
+      cancelDictation();
+    }
+  }, [cancelDictation, live]);
 
   // "Ask HIMI" buttons on other pages put text in the box and ask for focus.
   useEffect(() => {

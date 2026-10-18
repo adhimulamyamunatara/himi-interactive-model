@@ -5,6 +5,7 @@ import { useUser } from './UserContext';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSpeechOutput } from '../hooks/useSpeechOutput';
 import { askTutor, describeTutorError } from '../services/tutorService';
+import { basicReply } from '../utils/basicHimi';
 import { loadQuizAttempts } from '../utils/analyticsStorage';
 import { deriveRobotState } from '../utils/companionState';
 import { createCompanionSession } from '../utils/companionSession';
@@ -17,6 +18,9 @@ const CompanionContext = createContext(null);
 /** Speech ids of the companion's replies start with this, so its playback is never confused with Chat's. */
 export const COMPANION_SPEECH_PREFIX = 'companion-';
 export const companionSpeechId = (entryId) => `${COMPANION_SPEECH_PREFIX}${entryId}`;
+
+/** A live conversation gives up on a slow AI after this long and answers in basic mode, so it never goes silent. */
+export const LIVE_REPLY_TIMEOUT_MS = 25_000;
 
 const isWideScreen = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 768px)').matches;
 
@@ -42,6 +46,8 @@ export function CompanionProvider({ children }) {
   // The saved "left open" choice only applies on wide screens; on a phone the panel is a full sheet and starts closed.
   const [open, setOpenState] = useState(() => preferences.companionOpen && isWideScreen());
   const [draft, setDraft] = useState('');
+  // The full-screen live conversation. Never remembered: it always starts closed, so the microphone cannot start by itself.
+  const [live, setLive] = useState(false);
   const [focusNonce, setFocusNonce] = useState(0);
 
   const userKey = user?.email ?? null;
@@ -68,6 +74,7 @@ export function CompanionProvider({ children }) {
       previousUserRef.current = userKey;
       getSpeechOutput().stop();
       session.reset();
+      setLive(false);
     }
   }, [userKey, session]);
 
@@ -98,14 +105,26 @@ export function CompanionProvider({ children }) {
     });
   }, []);
 
+  /** In a live conversation a failed or slow AI answers in basic mode instead of ending the conversation. */
+  const liveOptions = useCallback(
+    () => ({
+      timeoutMs: LIVE_REPLY_TIMEOUT_MS,
+      fallback: (message) => {
+        const { user: currentUser, preferences: prefs } = latestRef.current;
+        return basicReply(message, { language: prefs.explanationLanguage, name: currentUser?.name ?? '' });
+      }
+    }),
+    []
+  );
+
   const send = useCallback(
-    async (text) => {
+    async (text, { live: inLive = false } = {}) => {
       const message = typeof text === 'string' ? text : '';
       const { subject } = latestRef.current;
       // Speech from the previous answer must not talk over the question being asked.
       getSpeechOutput().stop();
 
-      const result = await session.send(message, makeBuilder(message, subject), { subject });
+      const result = await session.send(message, makeBuilder(message, subject), { subject, ...(inLive ? liveOptions() : {}) });
 
       if (result.started && result.reason === 'local' && result.to) {
         navigate(result.to);
@@ -113,10 +132,10 @@ export function CompanionProvider({ children }) {
 
       return result;
     },
-    [makeBuilder, navigate, session]
+    [liveOptions, makeBuilder, navigate, session]
   );
 
-  const retry = useCallback(async () => {
+  const retry = useCallback(async (options = {}) => {
     const last = session.getSnapshot().lastQuestion;
 
     if (!last) {
@@ -124,14 +143,21 @@ export function CompanionProvider({ children }) {
     }
 
     getSpeechOutput().stop();
-    return session.retry(makeBuilder(last.text, last.subject));
-  }, [makeBuilder, session]);
+    return session.retry(makeBuilder(last.text, last.subject), options?.live ? liveOptions() : {});
+  }, [liveOptions, makeBuilder, session]);
 
   const reset = useCallback(() => {
     getSpeechOutput().stop();
     session.reset();
     setDraft('');
   }, [session]);
+
+  const openLive = useCallback(() => {
+    // The panel and the dashboard card hand over to the full-screen view; the conversation itself is shared.
+    setOpenState(false);
+    setLive(true);
+  }, []);
+  const closeLive = useCallback(() => setLive(false), []);
 
   const setExplanationLanguage = useCallback((code) => update({ explanationLanguage: code }), [update]);
 
@@ -156,6 +182,10 @@ export function CompanionProvider({ children }) {
       epoch: snapshot.epoch,
       celebrating: snapshot.celebrating,
       teaching: snapshot.teaching,
+      basic: snapshot.basic,
+      live,
+      openLive,
+      closeLive,
       lastQuestion: snapshot.lastQuestion,
       subject: selectedSubject,
       setSubject: setSelectedSubject,
@@ -175,7 +205,7 @@ export function CompanionProvider({ children }) {
       reset,
       celebrate: session.celebrate
     }),
-    [appendToDraft, askHimi, draft, focusNonce, open, preferences.explanationLanguage, requestFocus, reset, retry, selectedSubject, send, session, setExplanationLanguage, setOpen, setSelectedSubject, snapshot]
+    [appendToDraft, askHimi, closeLive, draft, focusNonce, live, open, openLive, preferences.explanationLanguage, requestFocus, reset, retry, selectedSubject, send, session, setExplanationLanguage, setOpen, setSelectedSubject, snapshot]
   );
 
   return <CompanionContext.Provider value={value}>{children}</CompanionContext.Provider>;

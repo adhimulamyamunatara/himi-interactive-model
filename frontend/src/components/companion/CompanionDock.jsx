@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiChevronDown, FiMinus } from 'react-icons/fi';
+import { FiChevronDown, FiMaximize2, FiMic, FiMinus } from 'react-icons/fi';
 import CompanionComposer from './CompanionComposer';
 import CompanionControls, { ICON_BUTTON } from './CompanionControls';
 import CompanionTranscript from './CompanionTranscript';
 import HimiRobot from './HimiRobot';
+import { useCompanion } from '../../context/CompanionContext';
 import { useUser } from '../../context/UserContext';
 import { useCompanionSpeech, useCompanionView } from '../../hooks/useCompanionView';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -67,6 +68,9 @@ function DockInner() {
                 </p>
                 <p className="truncate text-xs text-slate-600">{t('companion.tagline')}</p>
               </div>
+              <button type="button" onClick={view.openLive} aria-label={t('companion.live.open')} title={t('companion.live.open')} className={ICON_BUTTON}>
+                <FiMaximize2 aria-hidden="true" />
+              </button>
               <button type="button" onClick={minimize} aria-label={t('companion.close')} title={t('companion.close')} className={ICON_BUTTON}>
                 <FiMinus aria-hidden="true" />
               </button>
@@ -116,6 +120,16 @@ function DockInner() {
           <FiChevronDown aria-hidden="true" />
         </button>
       ) : (
+        <>
+        <button
+          type="button"
+          onClick={view.openLive}
+          aria-label={t('companion.live.open')}
+          title={t('companion.live.open')}
+          className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-lg text-white shadow-glow transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
+        >
+          <FiMic aria-hidden="true" />
+        </button>
         <button
           type="button"
           onClick={expand}
@@ -132,6 +146,7 @@ function DockInner() {
           </span>
           {robotState !== 'idle' ? <span className="hidden text-xs font-semibold text-blue-700 sm:inline">{stateLabel}</span> : null}
         </button>
+        </>
       )}
     </div>
   );
@@ -141,8 +156,10 @@ function DockInner() {
 export default function CompanionDock() {
   const { user } = useUser();
   const { pathname } = useLocation();
+  const { live } = useCompanion();
 
-  if (!user || !isDockVisibleOn(pathname)) {
+  // The full-screen live view takes over; the dock comes back when it closes.
+  if (!user || live || !isDockVisibleOn(pathname)) {
     return null;
   }
 

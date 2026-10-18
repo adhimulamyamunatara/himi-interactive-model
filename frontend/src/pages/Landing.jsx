@@ -21,6 +21,7 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import HimiRobot from '../components/companion/HimiRobot';
 import Reveal from '../components/common/Reveal';
+import { useCompanion } from '../context/CompanionContext';
 import { useUser } from '../context/UserContext';
 
 const FEATURES = [
@@ -179,6 +180,8 @@ function HeroChatPreview() {
 
 function MeetHimi({ ctaTarget, ctaLabel }) {
   const [preview, setPreview] = useState('idle');
+  const { openLive } = useCompanion();
+  const signedIn = ctaLabel === 'Go to dashboard';
 
   return (
     <section className="section-shell py-20" id="meet-himi" aria-labelledby="meet-himi-title">
@@ -223,12 +226,23 @@ function MeetHimi({ ctaTarget, ctaLabel }) {
             ))}
           </ul>
           <p className="mt-5 text-xs leading-5 text-slate-600">
-            Honest limits: voice is turn-based (you speak, check the text, send, and HIMI replies). The robot&rsquo;s expressions show what the app is doing; HIMI does not detect your emotions or gestures.
+            Honest limits: live mode is a hands-free loop (HIMI listens, answers, then listens again) built on your browser&rsquo;s speech services, not streaming audio, and HIMI does not listen while it speaks. If the AI cannot be reached, HIMI says so and switches to a basic mode that can chat and open pages but cannot explain subjects. The robot&rsquo;s expressions show what the app is doing; HIMI does not detect your emotions or gestures.
           </p>
-          <div className="mt-6">
-            <Button to={ctaTarget} size="lg">
-              {ctaLabel === 'Go to dashboard' ? 'Talk to HIMI' : 'Start talking to HIMI'} <FiArrowRight aria-hidden="true" />
-            </Button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {signedIn ? (
+              <>
+                <Button size="lg" onClick={openLive}>
+                  <FiMic aria-hidden="true" /> Talk to HIMI live
+                </Button>
+                <Button to={ctaTarget} size="lg" variant="secondary">
+                  Go to dashboard <FiArrowRight aria-hidden="true" />
+                </Button>
+              </>
+            ) : (
+              <Button to={ctaTarget} size="lg">
+                Start talking to HIMI <FiArrowRight aria-hidden="true" />
+              </Button>
+            )}
           </div>
         </Reveal>
       </div>

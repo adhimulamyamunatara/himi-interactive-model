@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import CompanionDock from './components/companion/CompanionDock';
+import LiveHimi from './components/companion/LiveHimi';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageSkeleton } from './components/common/Skeleton';
 import Footer from './components/layout/Footer';
@@ -88,6 +89,7 @@ export default function App() {
       </main>
       {isChatRoute ? null : <Footer />}
       <CompanionDock />
+      <LiveHimi />
     </div>
   );
 }
