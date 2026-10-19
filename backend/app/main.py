@@ -16,6 +16,12 @@ app.add_middleware(
 app.include_router(api_router)
 
 
+@app.get("/healthz")
+async def healthz():
+    """Cheap liveness check for Render and for a keep-alive ping. It never calls Gemini."""
+    return {"status": "ok"}
+
+
 @app.get("/")
 async def root():
     return {

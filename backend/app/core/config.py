@@ -8,7 +8,8 @@ load_dotenv()
 
 
 def _split_origins(value: str) -> list[str]:
-    return [item.strip() for item in value.split(",") if item.strip()]
+    # A browser sends the origin without a trailing slash, so "https://x.github.io/" must still match.
+    return [item.strip().rstrip("/") for item in value.split(",") if item.strip()]
 
 
 @dataclass(slots=True)

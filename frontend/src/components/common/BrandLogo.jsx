@@ -8,10 +8,12 @@
  * - `mark`: the robot-and-book emblem on its own, for tight spaces and avatars.
  * - `full`: emblem, wordmark and tagline, for hero and sign-in areas.
  */
+// Public files live under the site's base path (it is not "/" on GitHub Pages).
+const BASE = import.meta.env.BASE_URL;
 const VARIANTS = {
-  horizontal: { src: '/himi-logo-horizontal.png', width: 405, height: 206 },
-  mark: { src: '/himi-mark.png', width: 274, height: 237 },
-  full: { src: '/himi-logo-full.png', width: 479, height: 548 }
+  horizontal: { src: `${BASE}himi-logo-horizontal.png`, width: 405, height: 206 },
+  mark: { src: `${BASE}himi-mark.png`, width: 274, height: 237 },
+  full: { src: `${BASE}himi-logo-full.png`, width: 479, height: 548 }
 };
 
 export default function BrandLogo({ variant = 'horizontal', className = 'h-10', alt = 'HIMI, your AI learning companion', ...props }) {

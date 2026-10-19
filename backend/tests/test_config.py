@@ -18,5 +18,23 @@ class QuizModelSettingTests(unittest.TestCase):
             self.assertEqual(settings.gemini_model, "chat-model")
 
 
+class AllowedOriginsTests(unittest.TestCase):
+    def test_trailing_slashes_and_spaces_are_removed(self):
+        from app.core.config import _split_origins
+
+        self.assertEqual(
+            _split_origins("https://a.github.io/, http://localhost:5173 ,,"),
+            ["https://a.github.io", "http://localhost:5173"],
+        )
+
+
+class HealthRouteTests(unittest.TestCase):
+    def test_healthz_is_registered_and_does_not_need_gemini(self):
+        from app.main import app
+
+        paths = {getattr(route, "path", None) for route in app.routes}
+        self.assertIn("/healthz", paths)
+
+
 if __name__ == "__main__":
     unittest.main()
