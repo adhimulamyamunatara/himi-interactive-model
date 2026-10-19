@@ -106,7 +106,7 @@ export default function Login() {
                   label="Name"
                   value={form.name}
                   onChange={handleChange('name')}
-                  placeholder="e.g. Bhargav"
+                  placeholder="e.g. Yamuna Tara"
                   icon={FiUser}
                   autoComplete="name"
                   error={errors.name}
