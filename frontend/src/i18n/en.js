@@ -548,5 +548,6 @@ export default {
   'companion.live.hint.text.mic': 'HIMI cannot use the microphone, so type to talk. HIMI can still speak its answers.',
   'companion.live.hint.text.unsupported': 'This browser cannot do voice input, so type to talk. HIMI can still speak its answers.',
   'companion.live.hint.text.voice-off': 'Voice is turned off in your settings, so this is a typing conversation.',
-  'companion.live.limits': 'Live means HIMI listens, answers and listens again by itself, using your browser\'s speech services. It is not streaming audio, and HIMI does not listen while it is speaking. Press Escape to leave.'
+  'companion.live.limits': 'Live means HIMI listens, answers and listens again by itself, using your browser\'s speech services. It is not streaming audio, and HIMI does not listen while it is speaking. Press Escape to leave.',
+  'companion.live.noVoice': 'HIMI could not play its voice in this browser, so read the reply on screen. Check your device volume and the browser\'s sound settings, then tap HIMI to continue.'
 };

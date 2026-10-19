@@ -299,6 +299,7 @@ export function useLiveHimi() {
     micActive,
     interim,
     micError,
+    speechFailed: typeof output.errorId === 'string' && output.errorId.startsWith('companion-') && Boolean(output.error),
     canListen,
     canSpeakDevice,
     speakReplies,

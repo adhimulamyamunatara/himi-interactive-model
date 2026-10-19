@@ -308,6 +308,11 @@ function LiveScreen() {
               <FiAlertCircle className="mt-0.5 shrink-0" aria-hidden="true" /> {live.micError}
             </p>
           ) : null}
+          {live.speechFailed ? (
+            <p role="alert" className="flex max-w-xl items-start gap-2 rounded-2xl bg-amber-100 px-4 py-2 text-sm text-amber-900">
+              <FiAlertCircle className="mt-0.5 shrink-0" aria-hidden="true" /> {t('companion.live.noVoice')}
+            </p>
+          ) : null}
         </div>
 
         <section aria-label={t('companion.transcript')} className="w-full max-w-2xl space-y-2">
