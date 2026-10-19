@@ -110,6 +110,24 @@ The browser-level checks (Playwright against a local build) are not part of this
 
 ---
 
+## Deployment
+
+The backend is set up for **Render** and the frontend for **GitHub Pages** (published by a GitHub Actions workflow). Step-by-step instructions, the exact Render form values and a keep-awake ping are in [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+---
+
+## Deployment
+
+The backend is set up for **Render** and the frontend for **GitHub Pages** (published by a GitHub Actions workflow). Step-by-step instructions, the exact Render form values and a keep-awake ping are in [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+---
+
+## Deployment
+
+The backend is set up for **Render** and the frontend for **GitHub Pages** (published by a GitHub Actions workflow). Step-by-step instructions, the exact Render form values and a keep-awake ping are in [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+---
+
 ## Honest limits
 
 HIMI is a working prototype. These are the things it does **not** do, so that nothing is promised that is not there:
@@ -138,7 +156,7 @@ HIMI is a working prototype. These are the things it does **not** do, so that no
 - Real accounts and a database for memory (for example a vector store with retrieval).
 - A multi-user virtual classroom.
 - A Live2D or 3D avatar. The current robot is a lightweight SVG.
-- Deployment setup (for example Vercel, Railway or Docker).
+- Docker. (Render and GitHub Pages deployment is prepared: see `docs/DEPLOY.md`.)
 
 The original plan also named MongoDB, Firebase Authentication, MediaPipe, OpenCV and Whisper. None of these are used today.
 
@@ -150,8 +168,11 @@ The original plan also named MongoDB, Firebase Authentication, MediaPipe, OpenCV
 himi-interactive-model/
 ├── frontend/   React app (pages, components, hooks, i18n, tests next to the code)
 ├── backend/    FastAPI app (api routes, agents, services, schemas) and unit tests
-├── docs/       PHASE3.md: status, limits and manual checks
+├── docs/       PHASE3.md (status, limits, manual checks) and DEPLOY.md (Render and GitHub Pages)
 ├── assets/     Reserved for project assets (currently empty)
+├── .github/    GitHub Actions workflow that publishes the frontend
+├── .github/    GitHub Actions workflow that publishes the frontend
+├── .github/    GitHub Actions workflow that publishes the frontend
 ├── LICENSE
 └── README.md
 ```
