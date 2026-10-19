@@ -116,18 +116,6 @@ The backend is set up for **Render** and the frontend for **GitHub Pages** (publ
 
 ---
 
-## Deployment
-
-The backend is set up for **Render** and the frontend for **GitHub Pages** (published by a GitHub Actions workflow). Step-by-step instructions, the exact Render form values and a keep-awake ping are in [`docs/DEPLOY.md`](docs/DEPLOY.md).
-
----
-
-## Deployment
-
-The backend is set up for **Render** and the frontend for **GitHub Pages** (published by a GitHub Actions workflow). Step-by-step instructions, the exact Render form values and a keep-awake ping are in [`docs/DEPLOY.md`](docs/DEPLOY.md).
-
----
-
 ## Honest limits
 
 HIMI is a working prototype. These are the things it does **not** do, so that nothing is promised that is not there:
@@ -170,8 +158,6 @@ himi-interactive-model/
 ├── backend/    FastAPI app (api routes, agents, services, schemas) and unit tests
 ├── docs/       PHASE3.md (status, limits, manual checks) and DEPLOY.md (Render and GitHub Pages)
 ├── assets/     Reserved for project assets (currently empty)
-├── .github/    GitHub Actions workflow that publishes the frontend
-├── .github/    GitHub Actions workflow that publishes the frontend
 ├── .github/    GitHub Actions workflow that publishes the frontend
 ├── LICENSE
 └── README.md

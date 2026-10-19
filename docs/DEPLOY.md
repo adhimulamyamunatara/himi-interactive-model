@@ -59,12 +59,10 @@ Things to know:
 ## 3. Frontend on GitHub Pages
 
 1. In the GitHub repository, open **Settings → Pages** and set **Source** to **GitHub Actions**. (Free Pages needs a public repository.)
-2. Open **Settings → Secrets and variables → Actions → Variables** and add a repository variable:
-   - Name: `VITE_API_BASE_URL`
-   - Value: your Render URL, for example `https://himi-interactive-model.onrender.com`
+2. Nothing else is needed: the workflow already points at `https://himi-interactive-model.onrender.com`. To use a different backend, add a repository variable `VITE_API_BASE_URL` under **Settings → Secrets and variables → Actions → Variables**.
 3. Push to `main`, or run **Actions → Deploy frontend to GitHub Pages → Run workflow**.
 
-The workflow checks that the variable is set, runs lint and the unit tests, builds the app for the `/himi-interactive-model/` path, adds a fallback page so refreshing on a deep link works, and publishes it.
+The workflow runs lint and the unit tests, builds the app for the `/himi-interactive-model/` path, adds a fallback page so refreshing on a deep link works, and publishes it.
 
 ## 4. Check the live site
 
@@ -78,4 +76,4 @@ The workflow checks that the variable is set, runs lint and the unit tests, buil
 
 - **Sign-in is still the local demo** (no password, data in the browser). That is fine for a college project, but anyone who knows the Render address can call the API and use your Gemini quota. Set a budget alert and a quota cap on the key, and keep `.env` out of git (it is already ignored).
 - If the key is ever exposed, create a new one and replace it in Render.
-- The workflow reads the `VITE_API_BASE_URL` variable at build time, so after changing the Render address, run the workflow again.
+- The workflow bakes the backend address into the build (the `VITE_API_BASE_URL` variable, or the default Render address), so after changing the Render address, run the workflow again.
