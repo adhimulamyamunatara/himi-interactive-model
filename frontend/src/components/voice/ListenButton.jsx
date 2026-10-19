@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { FiPlay, FiRepeat, FiSquare } from 'react-icons/fi';
 import { useT } from '../../i18n/I18nContext';
 import { useSpeechOutput } from '../../hooks/useSpeechOutput';
@@ -19,17 +19,24 @@ export default function ListenButton({ messageId, text, alwaysVisible = false })
   const speaking = speakingId === messageId;
   const played = lastId === messageId;
 
-  // A reply that disappears (chat cleared, deleted or switched) must not keep talking.
-  useEffect(
-    () => () => {
-      const output = getSpeechOutput();
+  // A reply that disappears (chat cleared, deleted or switched) must not keep talking. React StrictMode (development)
+  // unmounts and re-mounts every component at once; stopping synchronously would cut off a reply that auto-read had
+  // just started, so the check waits a tick and only stops for a button that really is gone.
+  const shownIdRef = useRef(null);
+  useEffect(() => {
+    shownIdRef.current = messageId;
 
-      if (output.getSnapshot().speakingId === messageId) {
-        output.stop();
-      }
-    },
-    [messageId]
-  );
+    return () => {
+      shownIdRef.current = null;
+      setTimeout(() => {
+        const output = getSpeechOutput();
+
+        if (shownIdRef.current !== messageId && output.getSnapshot().speakingId === messageId) {
+          output.stop();
+        }
+      }, 0);
+    };
+  }, [messageId]);
 
   if (!supported) {
     return null;

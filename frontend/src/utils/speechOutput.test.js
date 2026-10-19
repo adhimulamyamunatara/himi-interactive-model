@@ -20,8 +20,79 @@ function createFakeEngine() {
       this.text = text;
     }
   }
-  return { synth, Utterance, spoken, output: createSpeechOutput({ synth, Utterance }) };
+  return { synth, Utterance, spoken, output: createSpeechOutput({ synth, Utterance, settleMs: 0, watchdogMs: 0 }) };
 }
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+describe('real-browser quirks', () => {
+  function engine(options) {
+    const spoken = [];
+    const synth = {
+      cancelCalls: 0,
+      resumeCalls: 0,
+      speaking: false,
+      speak: (utterance) => spoken.push(utterance),
+      cancel: () => {
+        synth.cancelCalls += 1;
+      },
+      resume: () => {
+        synth.resumeCalls += 1;
+      }
+    };
+    class Utterance {
+      constructor(text) {
+        this.text = text;
+      }
+    }
+    return { synth, spoken, output: createSpeechOutput({ synth, Utterance, ...options }) };
+  }
+
+  it('does not cancel an idle engine, and resumes a paused one before speaking', () => {
+    const { synth, spoken, output } = engine({ settleMs: 0, watchdogMs: 0 });
+    output.speak('m1', 'Hello there.');
+    assert.equal(synth.cancelCalls, 0);
+    assert.equal(synth.resumeCalls, 1);
+    assert.equal(spoken.length, 1);
+  });
+
+  it('starts a reply that follows a cancel only after a short settle delay (Chrome drops it otherwise)', async () => {
+    const { spoken, output } = engine({ settleMs: 40, watchdogMs: 0 });
+    output.stop();
+    output.speak('m1', 'Hello there.');
+    assert.equal(spoken.length, 0, 'not started in the same moment as the cancel');
+    assert.equal(output.getSnapshot().speakingId, 'm1');
+    await sleep(80);
+    assert.equal(spoken.length, 1);
+  });
+
+  it('a stop() during the settle delay means the reply never plays', async () => {
+    const { spoken, output } = engine({ settleMs: 40, watchdogMs: 0 });
+    output.stop();
+    output.speak('m1', 'Hello there.');
+    output.stop();
+    await sleep(100);
+    assert.equal(spoken.length, 0);
+    assert.equal(output.getSnapshot().speakingId, null);
+  });
+
+  it('turns a silent engine into an error instead of an endless speaking state', async () => {
+    const { output } = engine({ settleMs: 0, watchdogMs: 30 });
+    output.speak('m1', 'Hello there.');
+    await sleep(80);
+    assert.equal(output.getSnapshot().speakingId, null);
+    assert.equal(output.getSnapshot().errorId, 'm1');
+  });
+
+  it('does not raise the error when the engine started', async () => {
+    const { spoken, output } = engine({ settleMs: 0, watchdogMs: 30 });
+    output.speak('m1', 'Hello there.');
+    spoken[0].onstart();
+    await sleep(80);
+    assert.equal(output.getSnapshot().speakingId, 'm1');
+    assert.equal(output.getSnapshot().error, '');
+  });
+});
 
 describe('isSpeechOutputSupported', () => {
   it('needs both speechSynthesis and the utterance class', () => {
