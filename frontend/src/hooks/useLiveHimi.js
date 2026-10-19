@@ -269,6 +269,18 @@ export function useLiveHimi() {
     }
   }, [dispatch]);
 
+  /** "Test voice": say a short sentence so the student can check the sound. The loop pauses so the microphone never hears it. */
+  const testVoice = useCallback(
+    (text) => {
+      if (!['off', 'paused', 'text'].includes(machineRef.current.phase)) {
+        dispatch({ type: 'pause', reason: 'muted' });
+      }
+
+      getSpeechOutput().speak('voice-test', text);
+    },
+    [dispatch]
+  );
+
   const toggleSpeakReplies = useCallback(() => {
     const next = !speakReplies;
     setSpeakReplies(next);
@@ -310,6 +322,7 @@ export function useLiveHimi() {
     submitText,
     interrupt,
     toggleMic,
+    testVoice,
     toggleSpeakReplies,
     changeLanguage
   };

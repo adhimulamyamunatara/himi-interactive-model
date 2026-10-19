@@ -6,11 +6,14 @@ import MarkdownMessage from '../chat/MarkdownMessage';
 import { useCompanion } from '../../context/CompanionContext';
 import { useUser } from '../../context/UserContext';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useInstalledVoices } from '../../hooks/useInstalledVoices';
 import { useLiveHimi } from '../../hooks/useLiveHimi';
 import { useT } from '../../i18n/I18nContext';
 import { robotStateLabelKey } from '../../utils/companionState';
 import { LANGUAGES } from '../../utils/preferences';
+import { getSpeechOutput } from '../../utils/speechOutput';
 import { actionLabelKey, actionRoute } from '../../utils/tutor';
+import { pickVoice, voiceInputLanguageFor, voicesForLanguage } from '../../utils/voice';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -20,6 +23,62 @@ const ROUND_BUTTON = `${ROUND_BASE} border-white/25 bg-white/10 hover:bg-white/2
 const ROUND_ACTIVE = `${ROUND_BASE} border-rose-300/60 bg-rose-500 hover:bg-rose-400`;
 const TOOL_LINK =
   'inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200';
+
+/**
+ * Lets the student check HIMI's voice and pick another installed one. Some listed voices make no sound on a device,
+ * and only the student's ears can tell, so this is the way out.
+ */
+function VoiceCheck({ live, code }) {
+  const { t } = useT();
+  const voices = useInstalledVoices();
+  const [choice, setChoice] = useState(() => getSpeechOutput().getVoiceChoice(code));
+  const [seenCode, setSeenCode] = useState(code);
+
+  if (seenCode !== code) {
+    setSeenCode(code);
+    setChoice(getSpeechOutput().getVoiceChoice(code));
+  }
+
+  if (!live.canSpeakDevice) {
+    return null;
+  }
+
+  const options = voicesForLanguage(voices, code);
+  const current = pickVoice(voices, voiceInputLanguageFor(code), choice);
+
+  return (
+    <div className="flex max-w-2xl flex-wrap items-center justify-center gap-2 text-xs text-slate-200">
+      <button
+        type="button"
+        onClick={() => live.testVoice(t('companion.live.voiceTestText'))}
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 font-semibold transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/70"
+      >
+        <FiVolume2 aria-hidden="true" /> {t('companion.live.voiceTest')}
+      </button>
+      {options.length > 0 ? (
+        <label className="inline-flex items-center gap-2">
+          <span>{t('companion.live.voicePick')}</span>
+          <select
+            value={choice ?? ''}
+            onChange={(event) => {
+              const next = event.target.value || null;
+              getSpeechOutput().setVoiceChoice(code, next);
+              setChoice(next);
+            }}
+            className="max-w-[14rem] rounded-lg border border-white/25 bg-slate-900 px-2 py-1.5 text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/70"
+          >
+            <option value="">{current ? `${t('companion.live.voiceAuto')} (${current.name})` : t('companion.live.voiceAuto')}</option>
+            {options.map((voice) => (
+              <option key={`${voice.name}-${voice.lang}`} value={voice.name}>
+                {voice.name} ({voice.lang})
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+    </div>
+  );
+}
 
 /** Which line of help to show under the robot, from what the loop is doing and why it stopped. */
 function hintKey(phase, reason) {
@@ -414,6 +473,7 @@ function LiveScreen() {
           <span aria-hidden="true" className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${micActive ? 'bg-rose-400 motion-safe:animate-pulse' : 'bg-slate-500'}`} />
           <span>{micActive ? t('companion.live.micOn') : t('companion.live.micOff')}</span>
         </p>
+        <VoiceCheck live={live} code={explanationLanguage} />
         <p className="max-w-2xl text-center text-xs leading-5 text-slate-400 [@media(max-height:520px)]:hidden">
           {t('companion.live.limits')}
         </p>
