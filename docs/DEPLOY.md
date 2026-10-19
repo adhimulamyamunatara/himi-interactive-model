@@ -44,7 +44,19 @@ A free Google Apps Script can ping the service every 10 minutes:
 
 ```js
 function keepAlive() {
-  UrlFetchApp.fetch('https://<your-service>.onrender.com/healthz', { muteHttpExceptions: true });
+  const url = 'https://himi-interactive-model.onrender.com/healthz';
+  
+  try {
+    const response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true
+    });
+    
+    const timestamp = new Date().toLocaleString();
+    Logger.log(`[${timestamp}] ✅ Status: ${response.getResponseCode()}`);
+  } catch (error) {
+    Logger.log(`[${timestamp}] ❌ Error: ${error.message}`);
+  }
 }
 ```
 
