@@ -33,7 +33,8 @@ export function createSpeechOutput({
   synth = globalThis.speechSynthesis,
   Utterance = globalThis.SpeechSynthesisUtterance,
   settleMs = 150,
-  watchdogMs = 5000
+  watchdogMs = 5000,
+  storage = globalThis.localStorage
 } = {}) {
   let snapshot = IDLE;
   let token = 0;
@@ -42,6 +43,17 @@ export function createSpeechOutput({
   let waitTimer = null;
   let watchdog = null;
   const listeners = new Set();
+  const STORAGE_KEY = 'himi_voice_choice_v1';
+
+  /** The voice the student picked per language ("en" -> "Samantha"). Only a name is stored, never any audio. */
+  const readChoices = () => {
+    try {
+      const parsed = JSON.parse(storage?.getItem(STORAGE_KEY) ?? 'null');
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
 
   const clearTimers = () => {
     clearTimeout(waitTimer);
@@ -83,6 +95,23 @@ export function createSpeechOutput({
       return () => listeners.delete(listener);
     },
     getSnapshot: () => snapshot,
+    /** The voice name the student chose for a language code ("en", "te"), or null for automatic. */
+    getVoiceChoice: (code) => (typeof readChoices()[code] === 'string' ? readChoices()[code] : null),
+    setVoiceChoice(code, name) {
+      const next = { ...readChoices() };
+
+      if (name) {
+        next[code] = String(name).slice(0, 200);
+      } else {
+        delete next[code];
+      }
+
+      try {
+        storage?.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* private mode: the choice lasts until the page reloads only if storage works; otherwise it is ignored */
+      }
+    },
     /** The utterance being played. Holding it is what keeps Chrome from garbage-collecting it mid-speech. */
     playing: () => held,
     stop,
@@ -123,7 +152,7 @@ export function createSpeechOutput({
 
       try {
         // An installed voice for the language reads Telugu and English far better than the device default.
-        voice = pickVoice(synth.getVoices?.(), lang);
+        voice = pickVoice(synth.getVoices?.(), lang, readChoices()[lang.split('-')[0]] ?? null);
       } catch {
         voice = null;
       }

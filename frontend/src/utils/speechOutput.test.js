@@ -244,3 +244,52 @@ describe('voice selection', () => {
     assert.equal(throwing.spoken.length, 1);
   });
 });
+
+describe('the voice the student picked', () => {
+  function memory() {
+    const data = new Map();
+    return { getItem: (k) => data.get(k) ?? null, setItem: (k, v) => data.set(k, v) };
+  }
+  function build(storage) {
+    const spoken = [];
+    const synth = {
+      speak: (u) => spoken.push(u),
+      cancel() {},
+      getVoices: () => [
+        { name: 'Rishi', lang: 'en-IN' },
+        { name: 'Samantha', lang: 'en-US', default: true }
+      ]
+    };
+    class Utterance {
+      constructor(text) {
+        this.text = text;
+      }
+    }
+    return { spoken, output: createSpeechOutput({ synth, Utterance, storage, settleMs: 0, watchdogMs: 0 }) };
+  }
+
+  it('uses the device default voice until one is chosen, then the chosen voice, and can go back to automatic', () => {
+    const { spoken, output } = build(memory());
+    output.speak('a', 'Hello there.');
+    assert.equal(spoken[0].voice.name, 'Samantha');
+    output.setVoiceChoice('en', 'Rishi');
+    assert.equal(output.getVoiceChoice('en'), 'Rishi');
+    output.speak('b', 'Hello again.');
+    assert.equal(spoken[1].voice.name, 'Rishi');
+    output.setVoiceChoice('en', null);
+    assert.equal(output.getVoiceChoice('en'), null);
+    output.speak('c', 'Hello once more.');
+    assert.equal(spoken[2].voice.name, 'Samantha');
+  });
+
+  it('survives broken or missing storage', () => {
+    const broken = { getItem: () => '{not json', setItem: () => { throw new Error('full'); } };
+    const { spoken, output } = build(broken);
+    output.setVoiceChoice('en', 'Rishi');
+    output.speak('a', 'Hello there.');
+    assert.equal(spoken[0].voice.name, 'Samantha');
+    const none = build(null);
+    none.output.setVoiceChoice('en', 'Rishi');
+    assert.equal(none.output.getVoiceChoice('en'), null);
+  });
+});

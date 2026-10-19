@@ -14,19 +14,38 @@ const primary = (lang) => String(lang ?? '').toLowerCase().split(/[-_]/)[0];
 
 /**
  * Pick the best installed speech voice for `lang`.
- * An exact region match wins, then any voice for the same language. Returns null when none is installed
- * (the reader then falls back to the device default, which may pronounce the text badly).
+ *
+ * 1. A voice the student chose (by name) for this language always wins.
+ * 2. Otherwise, among voices for the same language: the device's default voice first (it is the one the system
+ *    really plays; some listed regional voices, such as an Indian-English voice that was never downloaded, are
+ *    silent), then an exact region match, then the first one.
+ *
+ * Returns null when none is installed (the reader then falls back to the device default).
  */
-export function pickVoice(voices, lang) {
+export function pickVoice(voices, lang, preferredName = null) {
   const list = Array.isArray(voices) ? voices.filter((voice) => voice && typeof voice.lang === 'string') : [];
   const wanted = String(lang ?? '').toLowerCase().replace('_', '-');
-  const exact = list.find((voice) => voice.lang.toLowerCase().replace('_', '-') === wanted);
+  const sameLanguage = list.filter((voice) => primary(voice.lang) === primary(wanted));
 
-  if (exact) {
-    return exact;
+  if (preferredName) {
+    const chosen = sameLanguage.find((voice) => voice.name === preferredName);
+
+    if (chosen) {
+      return chosen;
+    }
   }
 
-  return list.find((voice) => primary(voice.lang) === primary(wanted)) ?? null;
+  return (
+    sameLanguage.find((voice) => voice.default === true) ??
+    sameLanguage.find((voice) => voice.lang.toLowerCase().replace('_', '-') === wanted) ??
+    sameLanguage[0] ??
+    null
+  );
+}
+
+/** The voices installed for a language ("en", "te"), for a picker. */
+export function voicesForLanguage(voices, languageCode) {
+  return (Array.isArray(voices) ? voices : []).filter((voice) => voice && typeof voice.lang === 'string' && typeof voice.name === 'string' && primary(voice.lang) === primary(languageCode));
 }
 
 /**

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { canAutoRead, createAutoReadTracker, pickVoice, voiceAvailability, voiceInputLanguageFor } from './voice.js';
+import { canAutoRead, createAutoReadTracker, pickVoice, voiceAvailability, voiceInputLanguageFor, voicesForLanguage } from './voice.js';
 
 const voices = [
   { name: 'Alex', lang: 'en-US' },
@@ -18,8 +18,20 @@ describe('voiceInputLanguageFor', () => {
 });
 
 describe('pickVoice', () => {
-  it('prefers an exact region match', () => {
+  it('prefers an exact region match when no voice is the device default', () => {
     assert.equal(pickVoice(voices, 'en-IN').name, 'Rishi');
+  });
+
+  it('prefers the device default voice for the language (a listed regional voice may be silent)', () => {
+    const list = [{ name: 'Rishi', lang: 'en-IN' }, { name: 'Samantha', lang: 'en-US', default: true }];
+    assert.equal(pickVoice(list, 'en-IN').name, 'Samantha');
+  });
+
+  it('a voice the student chose wins, but only for the same language', () => {
+    const list = [{ name: 'Rishi', lang: 'en-IN' }, { name: 'Samantha', lang: 'en-US', default: true }, { name: 'Geeta', lang: 'te-IN' }];
+    assert.equal(pickVoice(list, 'en-IN', 'Rishi').name, 'Rishi');
+    assert.equal(pickVoice(list, 'en-IN', 'Geeta').name, 'Samantha');
+    assert.equal(pickVoice(list, 'en-IN', 'Gone').name, 'Samantha');
   });
 
   it('falls back to the same language in another region', () => {
@@ -101,5 +113,13 @@ describe('canAutoRead', () => {
     assert.equal(canAutoRead({ voiceEnabled: false, autoReadReplies: true, supported: true }), false);
     assert.equal(canAutoRead({ voiceEnabled: true, autoReadReplies: false, supported: true }), false);
     assert.equal(canAutoRead({ voiceEnabled: true, autoReadReplies: true, supported: false }), false);
+  });
+});
+
+describe('voicesForLanguage', () => {
+  it('lists only voices of that language and ignores junk', () => {
+    const list = [{ name: 'A', lang: 'en-US' }, { name: 'B', lang: 'te-IN' }, null, { lang: 'en-GB' }, { name: 'C', lang: 'en_GB' }];
+    assert.deepEqual(voicesForLanguage(list, 'en').map((voice) => voice.name), ['A', 'C']);
+    assert.deepEqual(voicesForLanguage(undefined, 'en'), []);
   });
 });
